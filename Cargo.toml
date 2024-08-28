@@ -1,13 +1,8 @@
-[package]
-name = "styling"
-version = "0.0.1"
+[workspace]
+members = ["styling"]
+resolver = "2"
+
+
+[workspace.package]
 edition = "2021"
-authors = ["mahmoud_eltahawy gemmy9300@gmail.com"]
-description = "state machine based css styling"
 license = "MIT"
-repository = "https://github.com/mahmoud-eltahawy/styling"
-
-
-[dependencies]
-ident_case = "1.0.1"
-paste = "1.0.15"
