@@ -1,8 +1,10 @@
 [workspace]
-members = ["styling"]
+members = ["styling","playground","macros/*"]
 resolver = "2"
-
 
 [workspace.package]
 edition = "2021"
 license = "MIT"
+
+[workspace.dependencies]
+simple_attr = { path = "./macros/simple_attr"}
