@@ -102,7 +102,7 @@ pub fn simple_attr(item: TokenStream) -> TokenStream {
     let mut result = String::new();
 
     for SimpleAttrCooked { name, props } in attrs.iter() {
-        let name_pascal = to_pascal(&name);
+        let name_pascal = to_pascal(name);
         let varients_pascal = props
             .iter()
             .map(|x| to_pascal(x.as_str()))
@@ -136,18 +136,13 @@ impl std::fmt::Display for {name_pascal} {{
     let props = attrs
         .iter()
         .map(|x| to_pascal(x.name.as_str()))
-        .map(|x| format!("{x}({x}),"))
-        .collect::<String>();
+        .fold(String::new(), |acc, x| acc + &format!("{x}({x}),"));
 
-    let props_maps = attrs
-        .iter()
-        .map(|x| &x.name)
-        .map(|x| {
-            let pascal = to_pascal(x);
-            let kebab = to_kebab(x);
-            format!(r#"Self::{pascal}(x) => format!("{kebab}:{{x}};"),"#)
-        })
-        .collect::<String>();
+    let props_maps = attrs.iter().map(|x| &x.name).fold(String::new(), |acc, x| {
+        let pascal = to_pascal(x);
+        let kebab = to_kebab(x);
+        acc + &format!(r#"Self::{pascal}(x) => format!("{kebab}:{{x}};"),"#)
+    });
 
     let simple_attrs = format!(
         r#"
