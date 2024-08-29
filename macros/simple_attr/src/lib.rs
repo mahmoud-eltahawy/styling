@@ -83,15 +83,15 @@ impl SimpleAttrCooked {
 }
 
 //NOTE : assuming it is snake case
-fn to_pascal(input: &String) -> String {
+fn to_pascal(input: &str) -> String {
     input
         .split('_')
-        .map(|x| x[0..1].to_uppercase() + &x[1..].to_string())
+        .map(|x| x[0..1].to_uppercase() + &x[1..])
         .collect::<String>()
 }
 
 //NOTE : assuming it is snake case
-fn to_kebab(input: &String) -> String {
+fn to_kebab(input: &str) -> String {
     input.replace('_', "-")
 }
 
@@ -103,15 +103,16 @@ pub fn simple_attr(item: TokenStream) -> TokenStream {
 
     for SimpleAttrCooked { name, props } in attrs {
         let name_pascal = to_pascal(&name);
-        let varients_pascal = props.iter().map(to_pascal).collect::<Vec<_>>().join(",");
-        let varients_maps = props
+        let varients_pascal = props
             .iter()
-            .map(|x| {
-                let pascal = to_pascal(x);
-                let kebab = to_kebab(x);
-                format!(r#"Self::{pascal} => "{kebab}","#)
-            })
-            .collect::<String>();
+            .map(|x| to_pascal(x.as_str()))
+            .collect::<Vec<_>>()
+            .join(",");
+        let varients_maps = props.iter().fold(String::new(), |acc, x| {
+            let pascal = to_pascal(x);
+            let kebab = to_kebab(x);
+            acc + &format!(r#"Self::{pascal} => "{kebab}","#)
+        });
 
         let the_enum = format!(
             r#"
