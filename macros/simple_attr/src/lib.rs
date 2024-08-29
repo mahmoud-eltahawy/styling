@@ -101,7 +101,7 @@ pub fn simple_attr(item: TokenStream) -> TokenStream {
 
     let mut result = String::new();
 
-    for SimpleAttrCooked { name, props } in attrs {
+    for SimpleAttrCooked { name, props } in attrs.iter() {
         let name_pascal = to_pascal(&name);
         let varients_pascal = props
             .iter()
@@ -127,12 +127,27 @@ impl std::fmt::Display for {name_pascal} {{
         write!(f, "{{}}",result)
     }}
 }}
-
             "#
         );
 
         result.push_str(&the_enum);
     }
+
+    let props = attrs
+        .iter()
+        .map(|x| to_pascal(x.name.as_str()))
+        .map(|x| format!("{x}({x}),"))
+        .collect::<String>();
+
+    let simple_attrs = format!(
+        r#"
+#[derive(Hash, Eq, PartialEq)]
+pub enum SimpleAttribute {{
+    {props}
+}}
+        "#
+    );
+    result.push_str(&simple_attrs);
 
     result.parse().unwrap()
 }
