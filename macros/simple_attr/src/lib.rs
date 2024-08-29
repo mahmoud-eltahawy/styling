@@ -15,15 +15,39 @@ struct SimpleAttr {
     props: Props,
 }
 
+impl SimpleAttr {
+    fn cook(self, ref_list: &[SimpleAttr]) -> SimpleAttrCooked {
+        let Self { name, props } = self;
+
+        let props = match props {
+            Props::List(list) => list,
+            Props::Reference(reference) => {
+                let Props::List(list) = ref_list
+                    .iter()
+                    .find(|x| x.name == reference && x.name != name)
+                    .map(|x| x.props.clone())
+                    .unwrap()
+                else {
+                    panic!("can not reference target");
+                };
+                list
+            }
+        };
+
+        SimpleAttrCooked { name, props }
+    }
+}
+
 #[derive(Debug)]
 struct SimpleAttrCooked {
     name: String,
     props: Vec<String>,
 }
 
-impl SimpleAttr {
-    fn parse(item: TokenStream) -> Vec<Self> {
-        item.to_string()
+impl SimpleAttrCooked {
+    fn parse(item: TokenStream) -> Vec<SimpleAttrCooked> {
+        let attrs = item
+            .to_string()
             .split(';')
             .map(|x| x.trim().to_string())
             .flat_map(|x| {
@@ -48,46 +72,23 @@ impl SimpleAttr {
                         ),
                     }
                 } else {
-                    panic!("neither : or = are found");
+                    panic!("neither (:) or (=) are found");
                 };
                 Some(attr)
             })
-            .collect()
-    }
+            .collect::<Vec<_>>();
 
-    fn cook(self, ref_list: &Vec<SimpleAttr>) -> SimpleAttrCooked {
-        let Self { name, props } = self;
-
-        let props = match props {
-            Props::List(list) => list,
-            Props::Reference(reference) => {
-                let Props::List(list) = ref_list
-                    .iter()
-                    .find(|x| x.name == reference)
-                    .unwrap()
-                    .props
-                    .clone()
-                else {
-                    panic!("can not reference target");
-                };
-                list
-            }
-        };
-
-        SimpleAttrCooked { name, props }
+        attrs.clone().into_iter().map(|x| x.cook(&attrs)).collect()
     }
 }
 
 #[proc_macro]
 pub fn simple_attr(item: TokenStream) -> TokenStream {
-    let attrs = SimpleAttr::parse(item);
-    let _attrs = attrs
-        .clone()
-        .into_iter()
-        .map(|x| x.cook(&attrs))
-        .collect::<Vec<_>>();
+    let attrs = SimpleAttrCooked::parse(item);
 
-    let tokens_acc = proc_macro2::TokenStream::new();
+    panic!("{:#?}", attrs);
 
-    TokenStream::from(tokens_acc)
+    // let tokens_acc = proc_macro2::TokenStream::new();
+
+    // TokenStream::from(tokens_acc)
 }
