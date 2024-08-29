@@ -82,13 +82,37 @@ impl SimpleAttrCooked {
     }
 }
 
+fn snake_to_pascal(input: &String) -> String {
+    input
+        .split('_')
+        .map(|x| x[0..1].to_uppercase() + &x[1..].to_string())
+        .collect::<String>()
+}
+
 #[proc_macro]
 pub fn simple_attr(item: TokenStream) -> TokenStream {
     let attrs = SimpleAttrCooked::parse(item);
 
-    panic!("{:#?}", attrs);
+    let mut result = String::new();
 
-    // let tokens_acc = proc_macro2::TokenStream::new();
+    for SimpleAttrCooked { name, props } in attrs {
+        let varients = props
+            .iter()
+            .map(snake_to_pascal)
+            .collect::<Vec<_>>()
+            .join(",");
 
-    // TokenStream::from(tokens_acc)
+        let the_enum = format!(
+            r#"
+#[derive(Hash, Eq, PartialEq)]
+pub enum {} {{ {} }}
+            "#,
+            snake_to_pascal(&name),
+            varients
+        );
+
+        result.push_str(&the_enum);
+    }
+
+    result.parse().unwrap()
 }
