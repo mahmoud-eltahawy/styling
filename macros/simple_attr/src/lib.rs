@@ -139,14 +139,35 @@ impl std::fmt::Display for {name_pascal} {{
         .map(|x| format!("{x}({x}),"))
         .collect::<String>();
 
+    let props_maps = attrs
+        .iter()
+        .map(|x| &x.name)
+        .map(|x| {
+            let pascal = to_pascal(x);
+            let kebab = to_kebab(x);
+            format!(r#"Self::{pascal}(x) => format!("{kebab}:{{x}};"),"#)
+        })
+        .collect::<String>();
+
     let simple_attrs = format!(
         r#"
 #[derive(Hash, Eq, PartialEq)]
 pub enum SimpleAttribute {{
     {props}
 }}
+
+impl std::fmt::Display for SimpleAttribute {{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
+        let result = match self {{
+            {props_maps}
+        }};
+        write!(f, "{{}}", result)
+    }}
+
+}}
         "#
     );
+
     result.push_str(&simple_attrs);
 
     result.parse().unwrap()
