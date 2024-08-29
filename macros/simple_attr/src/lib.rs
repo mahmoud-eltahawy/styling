@@ -82,11 +82,17 @@ impl SimpleAttrCooked {
     }
 }
 
-fn snake_to_pascal(input: &String) -> String {
+//NOTE : assuming it is snake case
+fn to_pascal(input: &String) -> String {
     input
         .split('_')
         .map(|x| x[0..1].to_uppercase() + &x[1..].to_string())
         .collect::<String>()
+}
+
+//NOTE : assuming it is snake case
+fn to_kebab(input: &String) -> String {
+    input.replace('_', "-")
 }
 
 #[proc_macro]
@@ -96,19 +102,32 @@ pub fn simple_attr(item: TokenStream) -> TokenStream {
     let mut result = String::new();
 
     for SimpleAttrCooked { name, props } in attrs {
-        let varients = props
+        let name_pascal = to_pascal(&name);
+        let varients_pascal = props.iter().map(to_pascal).collect::<Vec<_>>().join(",");
+        let varients_maps = props
             .iter()
-            .map(snake_to_pascal)
-            .collect::<Vec<_>>()
-            .join(",");
+            .map(|x| {
+                let pascal = to_pascal(x);
+                let kebab = to_kebab(x);
+                format!(r#"Self::{pascal} => "{kebab}","#)
+            })
+            .collect::<String>();
 
         let the_enum = format!(
             r#"
 #[derive(Hash, Eq, PartialEq)]
-pub enum {} {{ {} }}
-            "#,
-            snake_to_pascal(&name),
-            varients
+pub enum {name_pascal} {{ {varients_pascal} }}
+
+impl std::fmt::Display for {name_pascal} {{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
+        let result = match self {{
+            {varients_maps}
+        }};
+        write!(f, "{{}}",result)
+    }}
+}}
+
+            "#
         );
 
         result.push_str(&the_enum);
