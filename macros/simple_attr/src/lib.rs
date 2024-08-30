@@ -87,7 +87,7 @@ fn to_pascal(input: &str) -> String {
         .collect::<String>()
 }
 
-//NOTE : assuming it is snake case
+//NOTE : assuming it is kebab case
 fn to_snake(input: &str) -> String {
     input.replace('-', "_")
 }
