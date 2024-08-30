@@ -22,13 +22,16 @@ impl SimpleAttr {
         let props = match props {
             Props::List(list) => list,
             Props::Reference(reference) => {
-                let Props::List(list) = ref_list
+                let list = match ref_list
                     .iter()
                     .find(|x| x.name == reference)
                     .map(|x| x.props.clone())
-                    .unwrap()
-                else {
-                    panic!("can not reference target");
+                    .unwrap_or_else(|| panic!("can not find the reference : {reference}"))
+                {
+                    Props::List(list) => list,
+                    Props::Reference(ref_ref) => {
+                        panic!("reference {reference} points to another reference {ref_ref}");
+                    }
                 };
                 list
             }
@@ -54,14 +57,12 @@ impl SimpleAttrCooked {
                 if x.is_empty() {
                     return None;
                 }
-                let attr = if x.contains('=') {
-                    let (header, props) = x.split_once('=').unwrap();
+                let attr = if let Some((header, props)) = x.split_once('=') {
                     SimpleAttr {
                         name: clear_whitespace(header),
                         props: Props::Reference(clear_whitespace(props)),
                     }
-                } else if x.contains(':') {
-                    let (header, props) = x.split_once(':').unwrap();
+                } else if let Some((header, props)) = x.split_once(':') {
                     SimpleAttr {
                         name: clear_whitespace(header),
                         props: Props::List(
@@ -69,7 +70,7 @@ impl SimpleAttrCooked {
                         ),
                     }
                 } else {
-                    panic!("neither (:) or (=) are found");
+                    panic!("neither (:) or (=) are found on : {x}");
                 };
                 Some(attr)
             })
