@@ -49,7 +49,7 @@ impl SimpleAttrCooked {
         let attrs = item
             .to_string()
             .split(';')
-            .map(|x| x.trim().to_string())
+            .map(clear_whitespace)
             .flat_map(|x| {
                 if x.is_empty() {
                     return None;
@@ -57,18 +57,15 @@ impl SimpleAttrCooked {
                 let attr = if x.contains('=') {
                     let (header, props) = x.split_once('=').unwrap();
                     SimpleAttr {
-                        name: header.trim().to_string(),
-                        props: Props::Reference(props.trim().to_string()),
+                        name: clear_whitespace(header),
+                        props: Props::Reference(clear_whitespace(props)),
                     }
                 } else if x.contains(':') {
                     let (header, props) = x.split_once(':').unwrap();
                     SimpleAttr {
-                        name: header.trim().to_string(),
+                        name: clear_whitespace(header),
                         props: Props::List(
-                            props
-                                .split('|')
-                                .map(|x| x.trim().to_string())
-                                .collect::<Vec<_>>(),
+                            props.split('|').map(clear_whitespace).collect::<Vec<_>>(),
                         ),
                     }
                 } else {
@@ -85,14 +82,13 @@ impl SimpleAttrCooked {
 //NOTE : assuming it is snake case
 fn to_pascal(input: &str) -> String {
     input
-        .split('_')
+        .split('-')
         .map(|x| x[0..1].to_uppercase() + &x[1..])
         .collect::<String>()
 }
 
-//NOTE : assuming it is snake case
-fn to_kebab(input: &str) -> String {
-    input.replace('_', "-")
+fn clear_whitespace(input: &str) -> String {
+    input.split_whitespace().collect::<Vec<_>>().join("")
 }
 
 #[proc_macro]
@@ -110,8 +106,7 @@ pub fn simple_attr(item: TokenStream) -> TokenStream {
             .join(",");
         let varients_maps = props.iter().fold(String::new(), |acc, x| {
             let pascal = to_pascal(x);
-            let kebab = to_kebab(x);
-            acc + &format!(r#"Self::{pascal} => "{kebab}","#)
+            acc + &format!(r#"Self::{pascal} => "{x}","#)
         });
 
         let the_enum = format!(
@@ -140,8 +135,7 @@ impl std::fmt::Display for {name_pascal} {{
 
     let props_maps = attrs.iter().map(|x| &x.name).fold(String::new(), |acc, x| {
         let pascal = to_pascal(x);
-        let kebab = to_kebab(x);
-        acc + &format!(r#"Self::{pascal}(x) => format!("{kebab}:{{x}};"),"#)
+        acc + &format!(r#"Self::{pascal}(x) => format!("{x}:{{x}};"),"#)
     });
 
     let simple_attrs = format!(

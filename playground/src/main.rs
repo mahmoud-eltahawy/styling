@@ -2,8 +2,8 @@ use simple_attr::simple_attr;
 use styling::Style;
 
 simple_attr!(
-    color:normal|light|dark|only;
-    color_scheme=color;
+    color-scheme=color;
+    color:normal|light-blue|dark-green|only;
 );
 
 fn main() {
