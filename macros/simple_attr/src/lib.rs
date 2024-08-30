@@ -24,7 +24,7 @@ impl SimpleAttr {
             Props::Reference(reference) => {
                 let Props::List(list) = ref_list
                     .iter()
-                    .find(|x| x.name == reference && x.name != name)
+                    .find(|x| x.name == reference)
                     .map(|x| x.props.clone())
                     .unwrap()
                 else {
@@ -45,8 +45,8 @@ struct SimpleAttrCooked {
 }
 
 impl SimpleAttrCooked {
-    fn parse(item: TokenStream) -> Vec<SimpleAttrCooked> {
-        let attrs = item
+    fn parse(input: TokenStream) -> Vec<SimpleAttrCooked> {
+        let attrs = input
             .to_string()
             .split(';')
             .map(clear_whitespace)
@@ -79,7 +79,7 @@ impl SimpleAttrCooked {
     }
 }
 
-//NOTE : assuming it is snake case
+//NOTE : assuming it is kebab case
 fn to_pascal(input: &str) -> String {
     input
         .split('-')
@@ -87,18 +87,31 @@ fn to_pascal(input: &str) -> String {
         .collect::<String>()
 }
 
+//NOTE : assuming it is snake case
+fn to_snake(input: &str) -> String {
+    input.replace('-', "_")
+}
+
+fn clear_trailing_dash(input: String) -> String {
+    if input.chars().last().is_some_and(|x| x == '_') {
+        return input[0..input.len() - 1].to_string();
+    };
+    input
+}
+
 fn clear_whitespace(input: &str) -> String {
     input.split_whitespace().collect::<Vec<_>>().join("")
 }
 
 #[proc_macro]
-pub fn simple_attr(item: TokenStream) -> TokenStream {
+pub fn define_attributes(item: TokenStream) -> TokenStream {
     let attrs = SimpleAttrCooked::parse(item);
 
     let mut result = String::new();
 
     for SimpleAttrCooked { name, props } in attrs.iter() {
         let name_pascal = to_pascal(name);
+        let name_snake = to_snake(name);
         let varients_pascal = props
             .iter()
             .map(|x| to_pascal(x.as_str()))
@@ -106,7 +119,20 @@ pub fn simple_attr(item: TokenStream) -> TokenStream {
             .join(",");
         let varients_maps = props.iter().fold(String::new(), |acc, x| {
             let pascal = to_pascal(x);
-            acc + &format!(r#"Self::{pascal} => "{x}","#)
+            let cleared = clear_trailing_dash(x.to_string());
+            acc + &format!(r#"Self::{pascal} => "{cleared}","#)
+        });
+
+        let varients_funs = props.iter().fold(String::new(), |acc, x| {
+            let snake = to_snake(x);
+            let pascal = to_pascal(x);
+            acc + &format!(
+                r#"
+pub fn {snake}(self) -> Style<StyleBaseState<()>> {{
+    self.base({name_pascal}::{pascal})
+}}
+                    "#
+            )
         });
 
         let the_enum = format!(
@@ -122,6 +148,19 @@ impl std::fmt::Display for {name_pascal} {{
         write!(f, "{{}}",result)
     }}
 }}
+
+impl ToAttribute for {name_pascal}  {{
+    fn attribute(self) -> Attribute {{
+        Attribute::SimpleAttribute(SimpleAttribute::{name_pascal}(self))
+    }}
+}}
+
+impl Style<StyleBaseState<()>> {{
+    pub fn {name_snake}(self) -> Style<StyleBaseState<AttributeGetter<{name_pascal}>>> {{
+        self.into_prebase(Box::new(ToAttribute::attribute))
+    }}
+}}
+impl Style<StyleBaseState<AttributeGetter<{name_pascal}>>> {{ {varients_funs} }}
             "#
         );
 
