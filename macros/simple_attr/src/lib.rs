@@ -110,9 +110,53 @@ pub fn define_attributes(item: TokenStream) -> TokenStream {
 
     let mut result = String::new();
 
+    let props_pascal_names = attrs
+        .iter()
+        .map(|x| to_pascal(x.name.as_str()))
+        .fold(String::new(), |acc, x| acc + &format!("{x}({x}),"));
+
+    let props_snake_funs = attrs.iter().map(|x| &x.name).fold(String::new(), |acc, x| {
+        let pascal = to_pascal(x);
+        let snake = to_snake(x);
+        acc + &format!(
+            r#"
+pub fn {snake}(self) -> Style<StyleBaseState<AttributeGetter<{pascal}>>> {{
+    self.into_prebase(Box::new(ToAttribute::attribute))
+}}
+            "#
+        )
+    });
+
+    let props_display_maps = attrs.iter().map(|x| &x.name).fold(String::new(), |acc, x| {
+        let pascal = to_pascal(x);
+        acc + &format!(r#"Self::{pascal}(x) => format!("{x}:{{x}};"),"#)
+    });
+
+    let simple_attrs = format!(
+        r#"
+impl Style<StyleBaseState<()>> {{ {props_snake_funs} }}
+        
+#[derive(Hash, Eq, PartialEq)]
+pub enum SimpleAttribute {{
+    {props_pascal_names}
+}}
+
+impl std::fmt::Display for SimpleAttribute {{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
+        let result = match self {{
+            {props_display_maps}
+        }};
+        write!(f, "{{}}", result)
+    }}
+
+}}
+        "#
+    );
+    result.push_str(&simple_attrs);
+
     for SimpleAttrCooked { name, props } in attrs.iter() {
         let name_pascal = to_pascal(name);
-        let name_snake = to_snake(name);
+        // let name_snake = to_snake(name);
         let varients_pascal = props
             .iter()
             .map(|x| to_pascal(x.as_str()))
@@ -156,48 +200,12 @@ impl ToAttribute for {name_pascal}  {{
     }}
 }}
 
-impl Style<StyleBaseState<()>> {{
-    pub fn {name_snake}(self) -> Style<StyleBaseState<AttributeGetter<{name_pascal}>>> {{
-        self.into_prebase(Box::new(ToAttribute::attribute))
-    }}
-}}
 impl Style<StyleBaseState<AttributeGetter<{name_pascal}>>> {{ {varients_funs} }}
             "#
         );
 
         result.push_str(&the_enum);
     }
-
-    let props = attrs
-        .iter()
-        .map(|x| to_pascal(x.name.as_str()))
-        .fold(String::new(), |acc, x| acc + &format!("{x}({x}),"));
-
-    let props_maps = attrs.iter().map(|x| &x.name).fold(String::new(), |acc, x| {
-        let pascal = to_pascal(x);
-        acc + &format!(r#"Self::{pascal}(x) => format!("{x}:{{x}};"),"#)
-    });
-
-    let simple_attrs = format!(
-        r#"
-#[derive(Hash, Eq, PartialEq)]
-pub enum SimpleAttribute {{
-    {props}
-}}
-
-impl std::fmt::Display for SimpleAttribute {{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
-        let result = match self {{
-            {props_maps}
-        }};
-        write!(f, "{{}}", result)
-    }}
-
-}}
-        "#
-    );
-
-    result.push_str(&simple_attrs);
 
     result.parse().unwrap()
 }
