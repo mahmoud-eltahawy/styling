@@ -115,11 +115,20 @@ pub fn define_attributes(item: TokenStream) -> TokenStream {
         .map(|x| to_pascal(x.name.as_str()))
         .fold(String::new(), |acc, x| acc + &format!("{x}({x}),"));
 
-    let props_snake_funs = attrs.iter().map(|x| &x.name).fold(String::new(), |acc, x| {
-        let pascal = to_pascal(x);
-        let snake = to_snake(x);
+    let props_snake_funs = attrs.iter().fold(String::new(), |acc, x| {
+        let name = &x.name;
+        let pascal = to_pascal(name);
+        let snake = to_snake(name);
+        let props_docs = x
+            .props
+            .iter()
+            .fold(String::from("/// ## possible values"), |acc, x| {
+                acc + "\n" + &format!("/// - {x}")
+            });
         acc + &format!(
             r#"
+/// # {name} (simple property)
+{props_docs}
 pub fn {snake}(self) -> Style<StyleBaseState<AttributeGetter<{pascal}>>> {{
     self.into_prebase(Box::new(ToAttribute::attribute))
 }}
