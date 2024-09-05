@@ -52,7 +52,6 @@ impl SimpleAttrCooked {
         let attrs = input
             .to_string()
             .split(';')
-            .map(clear_whitespace)
             .flat_map(|x| {
                 if x.is_empty() {
                     return None;
@@ -63,6 +62,13 @@ impl SimpleAttrCooked {
                         props: Props::Reference(clear_whitespace(props)),
                     }
                 } else if let Some((header, props)) = x.split_once(':') {
+                    let (header, docs) = if let Some((_, header)) = header.split_once("///") {
+                        let (docs, header) = header.split_once('\n').unwrap();
+                        (header.trim(), Some(docs.trim()))
+                    } else {
+                        (header.trim(), None)
+                    };
+                    println!("HEADER : {header}\ndocs : {docs:#?}");
                     SimpleAttr {
                         name: clear_whitespace(header),
                         props: Props::List(
