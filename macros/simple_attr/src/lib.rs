@@ -1,7 +1,7 @@
 extern crate proc_macro;
 use core::panic;
 
-use proc_macro::{Ident, TokenStream};
+use proc_macro::TokenStream;
 
 #[derive(Debug, Clone)]
 enum Props {
@@ -105,93 +105,8 @@ fn clear_whitespace(input: &str) -> String {
 }
 
 #[proc_macro]
-pub fn define_attributes(input: TokenStream) -> TokenStream {
-    let mut tokens_lists: Vec<Vec<Ident>> = vec![vec![]];
-    #[derive(Debug)]
-    enum ParsePosition {
-        Left,
-        RightVarient,
-        RightReference,
-        Naming(PrevPosition),
-    }
-    #[derive(Debug)]
-    enum PrevPosition {
-        Left,
-        RightVarient,
-        RightReference,
-    }
-    let mut position = ParsePosition::Left;
-    for i in input.clone().into_iter() {
-        match i {
-            proc_macro::TokenTree::Group(_) => todo!(),
-            proc_macro::TokenTree::Ident(x) => match position {
-                ParsePosition::Naming(prev) => {
-                    position = match prev {
-                        PrevPosition::Left => ParsePosition::Left,
-                        PrevPosition::RightVarient => ParsePosition::RightVarient,
-                        PrevPosition::RightReference => ParsePosition::RightReference,
-                    }
-                }
-                ParsePosition::Left => todo!(),
-                ParsePosition::RightVarient => todo!(),
-                ParsePosition::RightReference => todo!(),
-            },
-            proc_macro::TokenTree::Punct(x) => match x.as_char() {
-                '|' => {
-                    match position {
-                        ParsePosition::Left | ParsePosition::RightReference => {
-                            panic!(" (|)  only allowed between varients")
-                        }
-                        _ => (),
-                    };
-                    position = ParsePosition::RightVarient;
-                }
-                '=' => {
-                    match position {
-                        ParsePosition::RightVarient
-                        | ParsePosition::RightReference
-                        | ParsePosition::Naming(_) => {
-                            panic!(" (=)  only allowed between right and left sides")
-                        }
-                        _ => (),
-                    };
-                    position = ParsePosition::RightReference;
-                }
-                ':' => {
-                    match position {
-                        ParsePosition::RightVarient
-                        | ParsePosition::RightReference
-                        | ParsePosition::Naming(_) => {
-                            panic!(" (:)  only allowed between right and left sides")
-                        }
-                        _ => (),
-                    };
-                    position = ParsePosition::RightVarient;
-                }
-                ';' => {
-                    match position {
-                        ParsePosition::Left | ParsePosition::Naming(_) => {
-                            panic!(" end the statement after you provide the right side with (;)")
-                        }
-                        _ => (),
-                    };
-                    position = ParsePosition::Left;
-                }
-                '-' => {
-                    position = ParsePosition::Naming(match position {
-                        ParsePosition::Left => PrevPosition::Left,
-                        ParsePosition::RightVarient => PrevPosition::RightVarient,
-                        ParsePosition::RightReference => PrevPosition::RightReference,
-                        ParsePosition::Naming(_) => unreachable!(),
-                    });
-                }
-                _ => unreachable!(),
-            },
-            proc_macro::TokenTree::Literal(_) => todo!(),
-        }
-    }
-    println!("{tokens_lists:#?}");
-    let attrs = SimpleAttrCooked::parse(input);
+pub fn define_attributes(item: TokenStream) -> TokenStream {
+    let attrs = SimpleAttrCooked::parse(item);
 
     let mut result = String::new();
 
