@@ -12,12 +12,17 @@ enum Props {
 #[derive(Debug, Clone)]
 struct SimpleAttr {
     name: String,
+    name_docs: Option<String>,
     props: Props,
 }
 
 impl SimpleAttr {
     fn cook(self, ref_list: &[SimpleAttr]) -> SimpleAttrCooked {
-        let Self { name, props } = self;
+        let Self {
+            name,
+            name_docs,
+            props,
+        } = self;
 
         let props = match props {
             Props::List(list) => list,
@@ -37,13 +42,18 @@ impl SimpleAttr {
             }
         };
 
-        SimpleAttrCooked { name, props }
+        SimpleAttrCooked {
+            name,
+            name_docs,
+            props,
+        }
     }
 }
 
 #[derive(Debug)]
 struct SimpleAttrCooked {
     name: String,
+    name_docs: Option<String>,
     props: Vec<String>,
 }
 
@@ -59,18 +69,19 @@ impl SimpleAttrCooked {
                 let attr = if let Some((header, props)) = x.split_once('=') {
                     SimpleAttr {
                         name: clear_whitespace(header),
+                        name_docs: None,
                         props: Props::Reference(clear_whitespace(props)),
                     }
                 } else if let Some((header, props)) = x.split_once(':') {
-                    let (header, docs) = if let Some((_, header)) = header.split_once("///") {
+                    let (header, name_docs) = if let Some((_, header)) = header.split_once("///") {
                         let (docs, header) = header.split_once('\n').unwrap();
-                        (header.trim(), Some(docs.trim()))
+                        (header.trim(), Some(docs.trim().to_string()))
                     } else {
                         (header.trim(), None)
                     };
-                    println!("HEADER : {header}\ndocs : {docs:#?}");
                     SimpleAttr {
                         name: clear_whitespace(header),
+                        name_docs,
                         props: Props::List(
                             props.split('|').map(clear_whitespace).collect::<Vec<_>>(),
                         ),
@@ -122,7 +133,13 @@ pub fn define_attributes(item: TokenStream) -> TokenStream {
         .fold(String::new(), |acc, x| acc + &format!("{x}({x}),"));
 
     let props_snake_funs = attrs.iter().fold(String::new(), |acc, x| {
-        let name = &x.name;
+        let SimpleAttrCooked {
+            name, name_docs, ..
+        } = x;
+        let name_docs = name_docs
+            .as_ref()
+            .map(|x| format!("{name} is `{x}`"))
+            .unwrap_or(name.clone());
         let pascal = to_pascal(name);
         let snake = to_snake(name);
         let props_docs = x
@@ -133,7 +150,7 @@ pub fn define_attributes(item: TokenStream) -> TokenStream {
             });
         acc + &format!(
             r#"
-/// # {name} (simple property)
+/// # {name_docs}
 {props_docs}
 pub fn {snake}(self) -> Style<StyleBaseState<AttributeGetter<{pascal}>>> {{
     self.into_prebase(Box::new(ToAttribute::attribute))
@@ -169,9 +186,8 @@ impl std::fmt::Display for SimpleAttribute {{
     );
     result.push_str(&simple_attrs);
 
-    for SimpleAttrCooked { name, props } in attrs.iter() {
+    for SimpleAttrCooked { name, props, .. } in attrs.iter() {
         let name_pascal = to_pascal(name);
-        // let name_snake = to_snake(name);
         let varients_pascal = props
             .iter()
             .map(|x| to_pascal(x.as_str()))

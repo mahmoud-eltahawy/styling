@@ -4,6 +4,7 @@ use crate::{
 };
 
 simple_attr::define_attributes!(
+///resets all properties, apart from unicode-bidi and direction, to their initial or inherited value.
 all:initial|inherit|unset;
 align-content:stretch|center|flex-start|flex-end|space-between|space-around|space-evenly|initial|inherit;
 align-items:stretch|center|flex-start|flex-end|start|end|baseline|initial|inherit;
