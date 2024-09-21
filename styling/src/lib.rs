@@ -5,6 +5,7 @@ mod background;
 mod color;
 mod length;
 mod simple_props;
+pub mod svg;
 
 pub type AttributeGetter<T> = Box<dyn FnOnce(T) -> attribute::Attribute>;
 pub type Attributs = HashSet<attribute::Attribute>;

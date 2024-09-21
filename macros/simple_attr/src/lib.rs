@@ -97,17 +97,17 @@ impl SimpleAttrCooked {
     }
 }
 
-//NOTE : assuming it is kebab case
+//NOTE : assuming it is snake case
 fn to_pascal(input: &str) -> String {
     input
-        .split('-')
+        .split('_')
         .map(|x| x[0..1].to_uppercase() + &x[1..])
         .collect::<String>()
 }
 
 //NOTE : assuming it is kebab case
-fn to_snake(input: &str) -> String {
-    input.replace('-', "_")
+fn to_kebab(input: &str) -> String {
+    input.replace('_', "-")
 }
 
 fn clear_trailing_dash(input: String) -> String {
@@ -141,7 +141,6 @@ pub fn define_attributes(item: TokenStream) -> TokenStream {
             .map(|x| format!("{name} is `{x}`"))
             .unwrap_or(name.clone());
         let pascal = to_pascal(name);
-        let snake = to_snake(name);
         let props_docs = x
             .props
             .iter()
@@ -152,7 +151,7 @@ pub fn define_attributes(item: TokenStream) -> TokenStream {
             r#"
 /// # {name_docs}
 {props_docs}
-pub fn {snake}(self) -> Style<StyleBaseState<AttributeGetter<{pascal}>>> {{
+pub fn {name}(self) -> Style<StyleBaseState<AttributeGetter<{pascal}>>> {{
     self.into_prebase(Box::new(ToAttribute::attribute))
 }}
             "#
@@ -200,11 +199,10 @@ impl std::fmt::Display for SimpleAttribute {{
         });
 
         let varients_funs = props.iter().fold(String::new(), |acc, x| {
-            let snake = to_snake(x);
             let pascal = to_pascal(x);
             acc + &format!(
                 r#"
-pub fn {snake}(self) -> Style<StyleBaseState<()>> {{
+pub fn {x}(self) -> Style<StyleBaseState<()>> {{
     self.base({name_pascal}::{pascal})
 }}
                     "#
