@@ -2,8 +2,12 @@ use styling::Style;
 
 fn main() {
     let result = Style::default()
-        .position()
-        .static_()
+        .background_origin()
+        .padding_box()
+        .all()
+        .initial()
+        .accent_color()
+        .dark_red()
         .accent_color()
         .red()
         .margin()

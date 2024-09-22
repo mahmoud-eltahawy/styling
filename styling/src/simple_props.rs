@@ -5,41 +5,41 @@ use crate::{
 
 simple_attr::define_attributes!(
 all:initial|inherit|unset;
-align_content:stretch|center|flex_start|flex_end|space_between|space_around|space_evenly|initial|inherit;
-align_items:stretch|center|flex_start|flex_end|start|end|baseline|initial|inherit;
-align_self:auto|stretch|center|flex_start|flex_end|baseline|initial|inherit;
-animation_direction:normal|reverse|alternate|alternate_reverse|initial|inherit;
-animation_fill_mode:none|forwards|backwards|both|initial|inherit;
-animation_play_state:paused|running|initial|inherit;
+align-content:stretch|center|flex-start|flex-end|space-between|space-around|space-evenly|initial|inherit;
+align-items:stretch|center|flex-start|flex-end|start|end|baseline|initial|inherit;
+align-self:auto|stretch|center|flex-start|flex-end|baseline|initial|inherit;
+animation-direction:normal|reverse|alternate|alternate-reverse|initial|inherit;
+animation-fill-mode:none|forwards|backwards|both|initial|inherit;
+animation-play-state:paused|running|initial|inherit;
 
-background_origin:padding_box|border_box|content_box|initial|inherit;
-background_clip=background_origin;
+background-origin:padding-box|border-box|content-box|initial|inherit;
+background-clip=background-origin;
 
-background_repeat:repeat_x|repeat_y|no_repeat|space|round|initial|inherit;
-background_blend_mode:normal|multiply|screen|overlay|darken|lighten|color_dodge|saturation|color|luminosity;
-background_attachment:scroll|fixed|local|initial|inherit;
+background-repeat:repeat-x|repeat-y|no-repeat|space|round|initial|inherit;
+background-blend-mode:normal|multiply|screen|overlay|darken|lighten|color-dodge|saturation|color|luminosity;
+background-attachment:scroll|fixed|local|initial|inherit;
 
-border_style              :none|hidden|dotted|dashed|solid|double|groove|ridge|inset|outset|initial|inherit;
-border_left_style         =border_style;
-border_right_style        =border_style;
-border_top_style          =border_style;
-border_bottom_style       =border_style;
-border_block_end_style    =border_style;
-border_block_start_style  =border_style;
-border_inline_style       =border_style;
-border_inline_start_style =border_style;
-border_inline_end_style   =border_style;
+border-style              :none|hidden|dotted|dashed|solid|double|groove|ridge|inset|outset|initial|inherit;
+border-left-style         =border-style;
+border-right-style        =border-style;
+border-top-style          =border-style;
+border-bottom-style       =border-style;
+border-block-end-style    =border-style;
+border-block-start-style  =border-style;
+border-inline-style       =border-style;
+border-inline-start-style =border-style;
+border-inline-end-style   =border-style;
 
-break_after   :auto|all|always|avoid|avoid_column|avoid_page|avoid_region|column|left|page|recto|region|right|verso|initial|inherit;
-break_before  =break_after;
-break_inside  =break_after;
+break-after   :auto|all|always|avoid|avoid-column|avoid-page|avoid-region|column|left|page|recto|region|right|verso|initial|inherit;
+break-before  =break-after;
+break-inside  =break-after;
 
-box_decoration_break:slice|clone|initial|inherit|unset;
-box_sizing:content_box|border_box|initial|inherit;
-backface_visibility:visible|hidden|initial|inherit;
+box-decoration-break:slice|clone|initial|inherit|unset;
+box-sizing:content-box|border-box|initial|inherit;
+backface-visibility:visible|hidden|initial|inherit;
 
-border_collapse:separate|collapse|initial|inherit;
-caption_side:top|bottom|initial|inherit;
+border-collapse:separate|collapse|initial|inherit;
+caption-side:top|bottom|initial|inherit;
 clear:none|left|right|both|initial|inherit;
-color_scheme:normal|light|dark|only;
+color-scheme:normal|light|dark|only;
 );

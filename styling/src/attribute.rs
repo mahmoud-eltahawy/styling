@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fmt::Display};
+use std::fmt::Display;
 
 use crate::{background, color::Color, length::Length, simple_props::SimpleAttribute};
 
@@ -31,7 +31,7 @@ pub enum Attribute {
 
 impl Style<StyleBaseState<()>> {
     pub fn with_capacity(capacity: usize) -> Self {
-        Self(HashSet::with_capacity(capacity), Default::default())
+        Self(Vec::with_capacity(capacity), Default::default())
     }
 
     pub(crate) fn into_prebase<T>(

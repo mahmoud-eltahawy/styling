@@ -53,7 +53,7 @@ impl Style<StyleBaseState<()>> {
 
     pub fn background_image(self, source: &str) -> Style<StyleBaseState<()>> {
         let Self(mut style, _) = self;
-        style.insert(Attribute::BackgroundImage(source.to_string()));
+        style.push(Attribute::BackgroundImage(source.to_string()));
         Style(style, StyleBaseState(()))
     }
 
@@ -82,7 +82,7 @@ impl Style<StyleBaseState<()>> {
 impl Style<BackgroundSizeState> {
     fn inner(self, size: Size) -> Style<StyleBaseState<()>> {
         let Self(mut style, _) = self;
-        style.insert(Attribute::BackgroundSize(size));
+        style.push(Attribute::BackgroundSize(size));
         Style(style, StyleBaseState(()))
     }
 
@@ -165,7 +165,7 @@ impl Style<BackgroundPreXPosition> {
 impl Style<PositionX> {
     fn inner(self, y: PositionY) -> Style<StyleBaseState<()>> {
         let Self(mut style, x) = self;
-        style.insert(attribute::Attribute::BackgroundPosition(XYPosition(x, y)));
+        style.push(attribute::Attribute::BackgroundPosition(XYPosition(x, y)));
         Style(style, StyleBaseState(()))
     }
 
