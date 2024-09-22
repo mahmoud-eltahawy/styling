@@ -1,50 +1,7 @@
 use core::panic;
 
-use super::{clear_whitespace, Props};
-
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, TokenTree};
-
-#[derive(Debug, Clone)]
-struct SimpleAttr {
-    name: String,
-    name_docs: Option<String>,
-    props: Props,
-}
-
-impl SimpleAttr {
-    fn cook(self, ref_list: &[SimpleAttr]) -> SimpleAttrCooked {
-        let Self {
-            name,
-            name_docs,
-            props,
-        } = self;
-
-        let props = match props {
-            Props::List(list) => list,
-            Props::Reference(reference) => {
-                let list = match ref_list
-                    .iter()
-                    .find(|x| x.name == reference)
-                    .map(|x| x.props.clone())
-                    .unwrap_or_else(|| panic!("can not find the reference : {reference}"))
-                {
-                    Props::List(list) => list,
-                    Props::Reference(ref_ref) => {
-                        panic!("reference {reference} points to another reference {ref_ref}");
-                    }
-                };
-                list
-            }
-        };
-
-        SimpleAttrCooked {
-            name,
-            name_docs,
-            props,
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct SimpleAttrCooked {
@@ -147,6 +104,57 @@ impl Block {
             _ => (),
         }
     }
+
+    fn parse(input: TokenStream) -> Self {
+        let input = proc_macro2::TokenStream::from(input);
+        let block = input.into_iter().fold(Block::new(), |mut block, x| {
+            match x {
+                TokenTree::Ident(ident) => {
+                    block.handle_ident(ident);
+                }
+                TokenTree::Punct(x) => {
+                    block.handle_punct(x.as_char());
+                }
+                TokenTree::Group(_) => unreachable!(),
+                TokenTree::Literal(_) => unreachable!(),
+            };
+            block
+        });
+        block
+    }
+
+    fn cook(&self) -> Vec<SimpleAttrCooked> {
+        self.lines
+            .iter()
+            .map(|line| {
+                let name = line.header.snake_case();
+                let props = match &line.attrs {
+                    Attrs::List(list) => list.iter().map(|x| x.snake_case()).collect::<Vec<_>>(),
+                    Attrs::Reference(name) => {
+                        let snake = name.snake_case();
+                        match self.lines.iter().find(|x| x.header.snake_case() == snake) {
+                            Some(line) => match &line.attrs {
+                                Attrs::List(list) => {
+                                    list.iter().map(|x| x.snake_case()).collect::<Vec<_>>()
+                                }
+                                Attrs::Reference(name) => panic!(
+                                    "{} references another reference {}",
+                                    snake,
+                                    name.snake_case()
+                                ),
+                            },
+                            None => panic!("{snake} reference not found"),
+                        }
+                    }
+                };
+                SimpleAttrCooked {
+                    name,
+                    name_docs: None,
+                    props,
+                }
+            })
+            .collect()
+    }
 }
 
 #[derive(Debug)]
@@ -191,13 +199,13 @@ impl Name {
         self.0.push(other);
     }
 
-    // fn snake_case(&self) -> String {
-    //     self.0
-    //         .iter()
-    //         .map(|x| x.to_string())
-    //         .collect::<Vec<_>>()
-    //         .join("_")
-    // }
+    fn snake_case(&self) -> String {
+        self.0
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>()
+            .join("-")
+    }
 
     // fn pascal_case(&self) -> String {
     //     self.0
@@ -216,62 +224,8 @@ impl Name {
     // }
 }
 
-pub fn experiment(input: TokenStream) {
-    let input = proc_macro2::TokenStream::from(input);
-    let block = input.into_iter().fold(Block::new(), |mut block, x| {
-        //
-        match x {
-            TokenTree::Ident(ident) => {
-                block.handle_ident(ident);
-            }
-            TokenTree::Punct(x) => {
-                block.handle_punct(x.as_char());
-            }
-            TokenTree::Group(_) => unreachable!(),
-            TokenTree::Literal(_) => unreachable!(),
-        };
-        block
-    });
-    println!("{:#?}", block);
-}
-
 impl SimpleAttrCooked {
     pub fn parse(input: TokenStream) -> Vec<SimpleAttrCooked> {
-        experiment(input.clone());
-        let attrs = input
-            .to_string()
-            .split(';')
-            .flat_map(|x| {
-                if x.is_empty() {
-                    return None;
-                }
-                let attr = if let Some((header, props)) = x.split_once('=') {
-                    SimpleAttr {
-                        name: clear_whitespace(header),
-                        name_docs: None,
-                        props: Props::Reference(clear_whitespace(props)),
-                    }
-                } else if let Some((header, props)) = x.split_once(':') {
-                    let (header, name_docs) = if let Some((_, header)) = header.split_once("///") {
-                        let (docs, header) = header.split_once('\n').unwrap();
-                        (header.trim(), Some(docs.trim().to_string()))
-                    } else {
-                        (header.trim(), None)
-                    };
-                    SimpleAttr {
-                        name: clear_whitespace(header),
-                        name_docs,
-                        props: Props::List(
-                            props.split('|').map(clear_whitespace).collect::<Vec<_>>(),
-                        ),
-                    }
-                } else {
-                    panic!("neither (:) or (=) are found on : {x}");
-                };
-                Some(attr)
-            })
-            .collect::<Vec<_>>();
-
-        attrs.clone().into_iter().map(|x| x.cook(&attrs)).collect()
+        Block::parse(input).cook()
     }
 }

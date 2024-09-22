@@ -5,12 +5,6 @@ use proc_macro::TokenStream;
 
 mod parsing;
 
-#[derive(Debug, Clone)]
-enum Props {
-    List(Vec<String>),
-    Reference(String),
-}
-
 //NOTE : assuming it is snake case
 fn to_pascal(input: &str) -> String {
     input
@@ -29,10 +23,6 @@ fn clear_trailing_dash(input: String) -> String {
         return input[0..input.len() - 1].to_string();
     };
     input
-}
-
-fn clear_whitespace(input: &str) -> String {
-    input.split_whitespace().collect::<Vec<_>>().join("")
 }
 
 #[proc_macro]
