@@ -1,13 +1,18 @@
-use core::panic;
-
 use proc_macro::TokenStream;
-use proc_macro2::{Ident, TokenTree};
+use proc_macro2::{Ident, Punct, TokenTree};
+use proc_macro_error2::abort;
 
 #[derive(Debug)]
 pub struct SimpleAttrCooked {
     pub(crate) name: String,
     pub(crate) name_docs: Option<String>,
     pub(crate) props: Vec<String>,
+}
+
+impl SimpleAttrCooked {
+    pub fn parse(input: TokenStream) -> Vec<SimpleAttrCooked> {
+        Block::parse(input).cook()
+    }
 }
 
 #[derive(Debug)]
@@ -44,7 +49,10 @@ impl Block {
                     line.header.add(ident);
                 }
                 None => {
-                    panic!("did not expect to be the first line due to header naming state")
+                    abort!(
+                        ident,
+                        "did not expect to be the first line due to header naming state"
+                    )
                 }
             },
             Stage::FirstAttrNaming => match self.lines.last_mut() {
@@ -53,7 +61,10 @@ impl Block {
                     self.stage = Stage::AttrNaming;
                 }
                 None => {
-                    panic!("did not expect to be the first line due to first attr naming state")
+                    abort!(
+                        ident,
+                        "did not expect to be the first line due to first attr naming state"
+                    )
                 }
             },
             Stage::FreshAttrNaming => match self.lines.last_mut() {
@@ -64,7 +75,10 @@ impl Block {
                     }
                 }
                 None => {
-                    panic!("did not expect to be the first line due to first attr naming state")
+                    abort!(
+                        ident,
+                        "did not expect to be the first line due to first attr naming state"
+                    )
                 }
             },
             Stage::FreshReference => match self.lines.last_mut() {
@@ -73,7 +87,10 @@ impl Block {
                     self.stage = Stage::AttrNaming;
                 }
                 None => {
-                    panic!("did not expect to be the first line due to first attr naming state")
+                    abort!(
+                        ident,
+                        "did not expect to be the first line due to first attr naming state"
+                    )
                 }
             },
             Stage::AttrNaming => match self.last_attr() {
@@ -81,14 +98,17 @@ impl Block {
                     name.add(ident);
                 }
                 None => {
-                    panic!("did not expect to be the first line or name due to attr naming state")
+                    abort!(
+                        ident,
+                        "did not expect to be the first line or name due to attr naming state"
+                    )
                 }
             },
         };
     }
 
-    fn handle_punct(&mut self, c: char) {
-        match c {
+    fn handle_punct(&mut self, punct: Punct) {
+        match punct.as_char() {
             ';' => {
                 self.stage = Stage::FreshLine;
             }
@@ -113,7 +133,7 @@ impl Block {
                     block.handle_ident(ident);
                 }
                 TokenTree::Punct(x) => {
-                    block.handle_punct(x.as_char());
+                    block.handle_punct(x);
                 }
                 TokenTree::Group(_) => unreachable!(),
                 TokenTree::Literal(_) => unreachable!(),
@@ -132,18 +152,25 @@ impl Block {
                     Attrs::List(list) => list.iter().map(|x| x.snake_case()).collect::<Vec<_>>(),
                     Attrs::Reference(name) => {
                         let snake = name.snake_case();
+                        let ident = name.0.last().unwrap();
                         match self.lines.iter().find(|x| x.header.snake_case() == snake) {
                             Some(line) => match &line.attrs {
                                 Attrs::List(list) => {
                                     list.iter().map(|x| x.snake_case()).collect::<Vec<_>>()
                                 }
-                                Attrs::Reference(name) => panic!(
-                                    "{} references another reference {}",
-                                    snake,
-                                    name.snake_case()
-                                ),
+                                Attrs::Reference(name) => {
+                                    let ident = name.0.last().unwrap();
+                                    abort!(
+                                        ident,
+                                        format!(
+                                            "{} references another reference {}",
+                                            snake,
+                                            name.snake_case()
+                                        )
+                                    );
+                                }
                             },
-                            None => panic!("{snake} reference not found"),
+                            None => abort!(ident, format!("{snake} reference not found")),
                         }
                     }
                 };
@@ -222,10 +249,4 @@ impl Name {
     //         .collect::<Vec<_>>()
     //         .join("-")
     // }
-}
-
-impl SimpleAttrCooked {
-    pub fn parse(input: TokenStream) -> Vec<SimpleAttrCooked> {
-        Block::parse(input).cook()
-    }
 }

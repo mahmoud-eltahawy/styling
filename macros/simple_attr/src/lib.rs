@@ -2,6 +2,7 @@ extern crate proc_macro;
 
 use parsing::SimpleAttrCooked;
 use proc_macro::TokenStream;
+use proc_macro_error2::proc_macro_error;
 
 mod parsing;
 
@@ -26,6 +27,7 @@ fn clear_trailing_dash(input: String) -> String {
 }
 
 #[proc_macro]
+#[proc_macro_error]
 pub fn define_attributes(input: TokenStream) -> TokenStream {
     let attrs = SimpleAttrCooked::parse(input);
 
