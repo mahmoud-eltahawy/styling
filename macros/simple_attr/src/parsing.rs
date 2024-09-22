@@ -62,18 +62,24 @@ struct Block {
 impl Block {
     fn new() -> Self {
         Self {
-            stage: Stage::Fresh,
+            stage: Stage::FreshLine,
             lines: Vec::new(),
         }
     }
 
+    fn last_attr(&mut self) -> Option<&mut Name> {
+        self.lines
+            .last_mut()
+            .and_then(|line| match &mut line.attrs {
+                Attrs::List(list) => list.last_mut(),
+                Attrs::Reference(name) => Some(name),
+            })
+    }
+
     fn handle_ident(&mut self, ident: Ident) {
         match self.stage {
-            Stage::Fresh => {
-                self.lines.push(Line {
-                    header: Name(vec![ident]),
-                    attrs: Vec::new(),
-                });
+            Stage::FreshLine => {
+                self.lines.push(Line::with(ident));
                 self.stage = Stage::HeaderNaming;
             }
             Stage::HeaderNaming => match self.lines.last_mut() {
@@ -84,17 +90,36 @@ impl Block {
                     panic!("did not expect to be the first line due to header naming state")
                 }
             },
-            Stage::FreshAttrNaming => match self.lines.last_mut() {
+            Stage::FirstAttrNaming => match self.lines.last_mut() {
                 Some(line) => {
-                    line.attrs.push(Name(vec![ident]));
+                    line.attrs = Attrs::List(vec![Name::with(ident)]);
                     self.stage = Stage::AttrNaming;
                 }
                 None => {
                     panic!("did not expect to be the first line due to first attr naming state")
                 }
             },
-            Stage::AttrNaming => match self.lines.last_mut().and_then(|line| line.attrs.last_mut())
-            {
+            Stage::FreshAttrNaming => match self.lines.last_mut() {
+                Some(Line { attrs, .. }) => {
+                    if let Attrs::List(list) = attrs {
+                        list.push(Name::with(ident));
+                        self.stage = Stage::AttrNaming;
+                    }
+                }
+                None => {
+                    panic!("did not expect to be the first line due to first attr naming state")
+                }
+            },
+            Stage::FreshReference => match self.lines.last_mut() {
+                Some(line) => {
+                    line.attrs = Attrs::Reference(Name::with(ident));
+                    self.stage = Stage::AttrNaming;
+                }
+                None => {
+                    panic!("did not expect to be the first line due to first attr naming state")
+                }
+            },
+            Stage::AttrNaming => match self.last_attr() {
                 Some(name) => {
                     name.add(ident);
                 }
@@ -106,15 +131,18 @@ impl Block {
     }
 
     fn handle_punct(&mut self, c: char) {
-        match (c, &self.stage) {
-            (';', _) => {
-                self.stage = Stage::Fresh;
+        match c {
+            ';' => {
+                self.stage = Stage::FreshLine;
             }
-            ('|', _) => {
+            ':' => {
+                self.stage = Stage::FirstAttrNaming;
+            }
+            '|' => {
                 self.stage = Stage::FreshAttrNaming;
             }
-            (':', _) => {
-                self.stage = Stage::FreshAttrNaming;
+            '=' => {
+                self.stage = Stage::FreshReference;
             }
             _ => (),
         }
@@ -123,35 +151,32 @@ impl Block {
 
 #[derive(Debug)]
 enum Stage {
-    Fresh,
+    FreshLine,
     HeaderNaming,
     AttrNaming,
+    FirstAttrNaming,
+    FreshReference,
     FreshAttrNaming,
+}
+
+#[derive(Debug)]
+enum Attrs {
+    List(Vec<Name>),
+    Reference(Name),
 }
 
 #[derive(Debug)]
 struct Line {
     header: Name,
-    attrs: Vec<Name>,
+    attrs: Attrs,
 }
 
 impl Line {
-    fn new() -> Self {
+    fn with(ident: Ident) -> Self {
         Line {
-            header: Name(Vec::new()),
-            attrs: Vec::new(),
+            header: Name(vec![ident]),
+            attrs: Attrs::List(Vec::new()),
         }
-    }
-
-    fn add_attr(&mut self, other: Ident) {
-        match self.attrs.last_mut() {
-            Some(attrs) => {
-                attrs.0.push(other);
-            }
-            None => {
-                self.attrs.push(Name(vec![other]));
-            }
-        };
     }
 }
 
@@ -159,33 +184,36 @@ impl Line {
 struct Name(Vec<Ident>);
 
 impl Name {
+    fn with(ident: Ident) -> Self {
+        Self(vec![ident])
+    }
     fn add(&mut self, other: Ident) {
         self.0.push(other);
     }
 
-    fn snake_case(&self) -> String {
-        self.0
-            .iter()
-            .map(|x| x.to_string())
-            .collect::<Vec<_>>()
-            .join("_")
-    }
+    // fn snake_case(&self) -> String {
+    //     self.0
+    //         .iter()
+    //         .map(|x| x.to_string())
+    //         .collect::<Vec<_>>()
+    //         .join("_")
+    // }
 
-    fn pascal_case(&self) -> String {
-        self.0
-            .iter()
-            .map(|x| x.to_string())
-            .map(|x| x[0..1].to_uppercase() + &x[1..])
-            .collect()
-    }
+    // fn pascal_case(&self) -> String {
+    //     self.0
+    //         .iter()
+    //         .map(|x| x.to_string())
+    //         .map(|x| x[0..1].to_uppercase() + &x[1..])
+    //         .collect()
+    // }
 
-    fn kebab_case(&self) -> String {
-        self.0
-            .iter()
-            .map(|x| x.to_string())
-            .collect::<Vec<_>>()
-            .join("-")
-    }
+    // fn kebab_case(&self) -> String {
+    //     self.0
+    //         .iter()
+    //         .map(|x| x.to_string())
+    //         .collect::<Vec<_>>()
+    //         .join("-")
+    // }
 }
 
 pub fn experiment(input: TokenStream) {
