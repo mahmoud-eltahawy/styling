@@ -8,6 +8,7 @@ pub enum Length {
     Mm(u8),
     In(u8),
     Px(u8),
+    Abs(u8),
     Pt(u8),
     Pc(u8),
     //relative
@@ -29,6 +30,7 @@ impl Display for Length {
             Length::Mm(num) => write!(f, "{num}mm"),
             Length::In(num) => write!(f, "{num}in"),
             Length::Px(num) => write!(f, "{num}px"),
+            Length::Abs(num) => write!(f, "{num}"),
             Length::Pt(num) => write!(f, "{num}pt"),
             Length::Pc(num) => write!(f, "{num}pc"),
             Length::Em(num) => write!(f, "{num}em"),
@@ -49,6 +51,10 @@ macro_rules! style_impl {
         impl Style<$output<AttributeGetter<Length>>> {
             pub fn px(self, num: u8) -> Style<$output<()>> {
                 self.base(Length::Px(num))
+            }
+
+            pub fn abs(self, num: u8) -> Style<$output<()>> {
+                self.base(Length::Abs(num))
             }
 
             pub fn cm(self, num: u8) -> Style<$output<()>> {

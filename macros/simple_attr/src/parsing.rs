@@ -1,16 +1,16 @@
-use proc_macro::TokenStream;
-use proc_macro2::{Ident, Punct, TokenTree};
+use proc_macro2::{Ident, Punct, TokenStream, TokenTree};
 use proc_macro_error2::abort;
 
 #[derive(Debug)]
 pub struct SimpleAttrCooked {
-    pub(crate) name: String,
-    pub(crate) name_docs: Option<String>,
-    pub(crate) props: Vec<String>,
+    pub name: String,
+    pub name_docs: Option<String>,
+    pub props: Vec<String>,
 }
 
 impl SimpleAttrCooked {
-    pub fn parse(input: TokenStream) -> Vec<SimpleAttrCooked> {
+    pub fn parse(input: proc_macro::TokenStream) -> Vec<SimpleAttrCooked> {
+        let input = TokenStream::from(input);
         Block::parse(input).cook()
     }
 }
@@ -145,8 +145,7 @@ impl Block {
     }
 
     fn parse(input: TokenStream) -> Self {
-        let input = proc_macro2::TokenStream::from(input);
-        let block = input.into_iter().fold(Block::new(), |mut block, x| {
+        input.into_iter().fold(Block::new(), |mut block, x| {
             match x {
                 TokenTree::Ident(ident) => {
                     block.handle_ident(ident);
@@ -160,8 +159,7 @@ impl Block {
                 TokenTree::Group(_) => unreachable!(),
             };
             block
-        });
-        block
+        })
     }
 
     fn cook(&self) -> Vec<SimpleAttrCooked> {
