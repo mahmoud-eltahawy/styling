@@ -44,8 +44,8 @@ pub fn define_attributes(input: TokenStream) -> TokenStream {
         } = x;
         let name_docs = name_docs
             .as_ref()
-            .map(|x| format!("{name} is `{x}`"))
-            .unwrap_or(name.clone());
+            .map(|x| format!("# {x}"))
+            .unwrap_or(String::from("# no description found"));
         let pascal = to_pascal(name);
         let snake = to_snake(name);
         let props_docs = x

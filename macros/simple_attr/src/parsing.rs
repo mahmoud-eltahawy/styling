@@ -141,7 +141,12 @@ impl Block {
             },
             FreshReference => abort!(literal, "can not doc reference!!"),
         };
-        name.docs = Some(literal.to_string());
+        let docs = literal
+            .to_string()
+            .chars()
+            .filter(|x| *x != '"')
+            .collect::<String>();
+        name.docs = Some(docs);
     }
 
     fn parse(input: TokenStream) -> Self {
@@ -167,6 +172,7 @@ impl Block {
             .iter()
             .map(|line| {
                 let name = line.header.snake_case();
+                let name_docs = line.header.docs.clone();
                 let props = match &line.attrs {
                     Attrs::List(list) => list.iter().map(|x| x.snake_case()).collect::<Vec<_>>(),
                     Attrs::Reference(name) => {
@@ -195,7 +201,7 @@ impl Block {
                 };
                 SimpleAttrCooked {
                     name,
-                    name_docs: None,
+                    name_docs,
                     props,
                 }
             })
