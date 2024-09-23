@@ -125,6 +125,25 @@ impl Block {
         }
     }
 
+    fn handle_literal(&mut self, literal: proc_macro2::Literal) {
+        use Stage::*;
+        let Some(line) = self.lines.last_mut() else {
+            abort!(literal, "can not add docs at beginning");
+        };
+        let name = match self.stage {
+            FreshLine | HeaderNaming => &mut line.header,
+            AttrNaming | FirstAttrNaming | FreshAttrNaming => match &mut line.attrs {
+                Attrs::List(list) => match list.last_mut() {
+                    Some(name) => name,
+                    None => abort!(literal, "can not add doc after : sign"),
+                },
+                Attrs::Reference(_) => abort!(literal, "can not doc reference!"),
+            },
+            FreshReference => abort!(literal, "can not doc reference!!"),
+        };
+        name.docs = Some(literal.to_string());
+    }
+
     fn parse(input: TokenStream) -> Self {
         let input = proc_macro2::TokenStream::from(input);
         let block = input.into_iter().fold(Block::new(), |mut block, x| {
@@ -135,8 +154,10 @@ impl Block {
                 TokenTree::Punct(x) => {
                     block.handle_punct(x);
                 }
+                TokenTree::Literal(literal) => {
+                    block.handle_literal(literal);
+                }
                 TokenTree::Group(_) => unreachable!(),
-                TokenTree::Literal(_) => unreachable!(),
             };
             block
         });
@@ -152,14 +173,14 @@ impl Block {
                     Attrs::List(list) => list.iter().map(|x| x.snake_case()).collect::<Vec<_>>(),
                     Attrs::Reference(name) => {
                         let snake = name.snake_case();
-                        let ident = name.0.last().unwrap();
+                        let ident = name.atoms.last().unwrap();
                         match self.lines.iter().find(|x| x.header.snake_case() == snake) {
                             Some(line) => match &line.attrs {
                                 Attrs::List(list) => {
                                     list.iter().map(|x| x.snake_case()).collect::<Vec<_>>()
                                 }
                                 Attrs::Reference(name) => {
-                                    let ident = name.0.last().unwrap();
+                                    let ident = name.atoms.last().unwrap();
                                     abort!(
                                         ident,
                                         format!(
@@ -209,25 +230,35 @@ struct Line {
 impl Line {
     fn with(ident: Ident) -> Self {
         Line {
-            header: Name(vec![ident]),
+            header: Name {
+                docs: None,
+                atoms: vec![ident],
+            },
             attrs: Attrs::List(Vec::new()),
         }
     }
 }
 
 #[derive(Debug)]
-struct Name(Vec<Ident>);
+struct Name {
+    docs: Option<String>,
+    atoms: Vec<Ident>,
+}
 
 impl Name {
     fn with(ident: Ident) -> Self {
-        Self(vec![ident])
+        Self {
+            docs: None,
+            atoms: vec![ident],
+        }
     }
+
     fn add(&mut self, other: Ident) {
-        self.0.push(other);
+        self.atoms.push(other);
     }
 
     fn snake_case(&self) -> String {
-        self.0
+        self.atoms
             .iter()
             .map(|x| x.to_string())
             .collect::<Vec<_>>()

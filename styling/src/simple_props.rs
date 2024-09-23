@@ -4,7 +4,7 @@ use crate::{
 };
 
 simple_attr::define_attributes!(
-all:initial|inherit|unset;
+all "all docs":initial|inherit|unset;
 align-content:stretch|center|flex-start|flex-end|space-between|space-around|space-evenly|initial|inherit;
 align-items:stretch|center|flex-start|flex-end|start|end|baseline|initial|inherit;
 align-self:auto|stretch|center|flex-start|flex-end|baseline|initial|inherit;
