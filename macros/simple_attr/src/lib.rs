@@ -1,23 +1,10 @@
 extern crate proc_macro;
 
-use parsing::SimpleAttrCooked;
+use parsing::parse;
 use proc_macro::TokenStream;
 use proc_macro_error2::proc_macro_error;
 
 mod parsing;
-
-//NOTE : assuming it is snake case
-fn to_pascal(input: &str) -> String {
-    input
-        .split('-')
-        .map(|x| x[0..1].to_uppercase() + &x[1..])
-        .collect::<String>()
-}
-
-//NOTE : assuming it is kebab case
-fn to_snake(input: &str) -> String {
-    input.replace('-', "_")
-}
 
 fn clear_trailing_dash(input: String) -> String {
     if input.chars().last().is_some_and(|x| x == '_') {
@@ -29,30 +16,29 @@ fn clear_trailing_dash(input: String) -> String {
 #[proc_macro]
 #[proc_macro_error]
 pub fn define_attributes(input: TokenStream) -> TokenStream {
-    let attrs = SimpleAttrCooked::parse(input);
+    let lines = parse(input);
 
     let mut result = String::new();
 
-    let props_pascal_names = attrs
+    let props_pascal_names = lines
         .iter()
-        .map(|x| to_pascal(x.name.as_str()))
+        .map(|x| x.header.pascal())
         .fold(String::new(), |acc, x| acc + &format!("{x}({x}),"));
 
-    let props_snake_funs = attrs.iter().fold(String::new(), |acc, x| {
-        let SimpleAttrCooked {
-            name, name_docs, ..
-        } = x;
-        let name_docs = name_docs
+    let props_snake_funs = lines.iter().fold(String::new(), |acc, x| {
+        let name_docs = x
+            .header
+            .docs
             .as_ref()
             .map(|x| format!("# {x}"))
             .unwrap_or(String::from("# no description found"));
-        let pascal = to_pascal(name);
-        let snake = to_snake(name);
+        let pascal = x.header.pascal();
+        let snake = x.header.snake();
         let props_docs = x
-            .props
+            .attrs
             .iter()
             .fold(String::from("/// ## possible values"), |acc, x| {
-                acc + "\n" + &format!("/// - {x}")
+                acc + "\n" + &format!("/// - {}", x.snake())
             });
         acc + &format!(
             r#"
@@ -65,10 +51,14 @@ pub fn {snake}(self) -> Style<StyleBaseState<AttributeGetter<{pascal}>>> {{
         )
     });
 
-    let props_display_maps = attrs.iter().map(|x| &x.name).fold(String::new(), |acc, x| {
-        let pascal = to_pascal(x);
-        acc + &format!(r#"Self::{pascal}(x) => format!("{x}:{{x}};"),"#)
-    });
+    let props_display_maps = lines
+        .iter()
+        .map(|x| &x.header)
+        .fold(String::new(), |acc, x| {
+            let pascal = x.pascal();
+            let snake = x.snake();
+            acc + &format!(r#"Self::{pascal}(x) => format!("{snake}:{{x}};"),"#)
+        });
 
     let simple_attrs = format!(
         r#"
@@ -92,22 +82,23 @@ impl std::fmt::Display for SimpleAttribute {{
     );
     result.push_str(&simple_attrs);
 
-    for SimpleAttrCooked { name, props, .. } in attrs.iter() {
-        let name_pascal = to_pascal(name);
-        let varients_pascal = props
+    for line in lines.iter() {
+        let name_pascal = line.header.pascal();
+        let varients_pascal = line
+            .attrs
             .iter()
-            .map(|x| to_pascal(x.as_str()))
+            .map(|x| x.pascal())
             .collect::<Vec<_>>()
             .join(",");
-        let varients_maps = props.iter().fold(String::new(), |acc, x| {
-            let pascal = to_pascal(x);
-            let cleared = clear_trailing_dash(x.to_string());
+        let varients_maps = line.attrs.iter().fold(String::new(), |acc, x| {
+            let pascal = x.pascal();
+            let cleared = clear_trailing_dash(x.kebab());
             acc + &format!(r#"Self::{pascal} => "{cleared}","#)
         });
 
-        let varients_funs = props.iter().fold(String::new(), |acc, x| {
-            let pascal = to_pascal(x);
-            let snake = to_snake(x);
+        let varients_funs = line.attrs.iter().fold(String::new(), |acc, x| {
+            let pascal = x.pascal();
+            let snake = x.snake();
             acc + &format!(
                 r#"
 pub fn {snake}(self) -> Style<StyleBaseState<()>> {{

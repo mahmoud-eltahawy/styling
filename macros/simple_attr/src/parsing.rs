@@ -1,18 +1,9 @@
 use proc_macro2::{Ident, Punct, TokenStream, TokenTree};
 use proc_macro_error2::abort;
 
-#[derive(Debug)]
-pub struct SimpleAttrCooked {
-    pub name: String,
-    pub name_docs: Option<String>,
-    pub props: Vec<String>,
-}
-
-impl SimpleAttrCooked {
-    pub fn parse(input: proc_macro::TokenStream) -> Vec<SimpleAttrCooked> {
-        let input = TokenStream::from(input);
-        Block::parse(input).cook()
-    }
+pub fn parse(input: proc_macro::TokenStream) -> Vec<StraightLine> {
+    let input = TokenStream::from(input);
+    Block::parse(input).straight()
 }
 
 #[derive(Debug)]
@@ -167,43 +158,45 @@ impl Block {
         })
     }
 
-    fn cook(&self) -> Vec<SimpleAttrCooked> {
-        self.lines
-            .iter()
+    fn straight(self) -> Vec<StraightLine> {
+        let Block { stage: _, lines } = self;
+        let ref_lines = lines.clone();
+        lines
+            .into_iter()
             .map(|line| {
-                let name = line.header.snake_case();
-                let name_docs = line.header.docs.clone();
-                let props = match &line.attrs {
-                    Attrs::List(list) => list.iter().map(|x| x.snake_case()).collect::<Vec<_>>(),
-                    Attrs::Reference(name) => {
-                        let snake = name.snake_case();
-                        let ident = name.atoms.last().unwrap();
-                        match self.lines.iter().find(|x| x.header.snake_case() == snake) {
+                let header = line.header.clone();
+                let attrs = match line.attrs {
+                    Attrs::List(list) => list,
+                    Attrs::Reference(ref_name) => {
+                        let snake_ref_name = ref_name.snake();
+                        let error_position = ref_name.name_atoms.last().unwrap();
+                        match ref_lines
+                            .iter()
+                            .find(|x| x.header.snake() == snake_ref_name)
+                        {
                             Some(line) => match &line.attrs {
-                                Attrs::List(list) => {
-                                    list.iter().map(|x| x.snake_case()).collect::<Vec<_>>()
-                                }
+                                Attrs::List(list) => list.clone(),
                                 Attrs::Reference(name) => {
-                                    let ident = name.atoms.last().unwrap();
+                                    let error_position =
+                                        name.name_atoms.last().unwrap_or(error_position);
                                     abort!(
-                                        ident,
+                                        error_position,
                                         format!(
                                             "{} references another reference {}",
-                                            snake,
-                                            name.snake_case()
+                                            snake_ref_name,
+                                            name.snake()
                                         )
                                     );
                                 }
                             },
-                            None => abort!(ident, format!("{snake} reference not found")),
+                            None => abort!(
+                                error_position,
+                                format!("{snake_ref_name} reference not found")
+                            ),
                         }
                     }
                 };
-                SimpleAttrCooked {
-                    name,
-                    name_docs,
-                    props,
-                }
+                StraightLine { header, attrs }
             })
             .collect()
     }
@@ -219,16 +212,22 @@ enum Stage {
     FreshAttrNaming,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Attrs {
     List(Vec<Name>),
     Reference(Name),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Line {
     header: Name,
     attrs: Attrs,
+}
+
+#[derive(Debug)]
+pub struct StraightLine {
+    pub header: Name,
+    pub attrs: Vec<Name>,
 }
 
 impl Line {
@@ -236,52 +235,52 @@ impl Line {
         Line {
             header: Name {
                 docs: None,
-                atoms: vec![ident],
+                name_atoms: vec![ident],
             },
             attrs: Attrs::List(Vec::new()),
         }
     }
 }
 
-#[derive(Debug)]
-struct Name {
-    docs: Option<String>,
-    atoms: Vec<Ident>,
+#[derive(Debug, Clone)]
+pub struct Name {
+    pub docs: Option<String>,
+    pub name_atoms: Vec<Ident>,
 }
 
 impl Name {
     fn with(ident: Ident) -> Self {
         Self {
             docs: None,
-            atoms: vec![ident],
+            name_atoms: vec![ident],
         }
     }
 
     fn add(&mut self, other: Ident) {
-        self.atoms.push(other);
+        self.name_atoms.push(other);
     }
 
-    fn snake_case(&self) -> String {
-        self.atoms
+    pub fn snake(&self) -> String {
+        self.name_atoms
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>()
+            .join("_")
+    }
+
+    pub fn pascal(&self) -> String {
+        self.name_atoms
+            .iter()
+            .map(|x| x.to_string())
+            .map(|x| x[0..1].to_uppercase() + &x[1..])
+            .collect()
+    }
+
+    pub fn kebab(&self) -> String {
+        self.name_atoms
             .iter()
             .map(|x| x.to_string())
             .collect::<Vec<_>>()
             .join("-")
     }
-
-    // fn pascal_case(&self) -> String {
-    //     self.0
-    //         .iter()
-    //         .map(|x| x.to_string())
-    //         .map(|x| x[0..1].to_uppercase() + &x[1..])
-    //         .collect()
-    // }
-
-    // fn kebab_case(&self) -> String {
-    //     self.0
-    //         .iter()
-    //         .map(|x| x.to_string())
-    //         .collect::<Vec<_>>()
-    //         .join("-")
-    // }
 }
