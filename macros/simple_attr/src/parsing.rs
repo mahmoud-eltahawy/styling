@@ -273,7 +273,7 @@ impl Name {
         format_ident!("{}", self.snake())
     }
 
-    pub fn pascal(&self) -> String {
+    fn pascal(&self) -> String {
         self.name_atoms
             .iter()
             .map(|x| x.to_string())
