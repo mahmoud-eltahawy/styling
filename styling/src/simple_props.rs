@@ -172,7 +172,144 @@ list-style-type "the type of list-item marker in a list."
 mask-clip "which area is affected by a mask image."
 :border-box|content-box|padding-box|fill-box|stroke-box|view-box|no-clip|border|padding|content|text|initial|inherit;
 
-mask-composite " a compositing operation used on the current mask layer with the mask layers below it."
+mask-composite "a compositing operation used on the current mask layer with the mask layers below it."
 :add|subtract|intersect|exclude|initial|inherit;
 
+mask-mode "whether the mask layer image should be treated as a luminance mask or as an alpha mask."
+:match-source|luminance|alpha|initial|inherit;
+
+mask-origin "the origin position (the mask position area) of a mask layer image."
+:border-box|content-box|padding-box|fill-box|stroke-box|view-box|initial|inherit;
+
+mask-repeat "sets if/how a mask image will be repeated."
+:repeat|repeat-x|repeat-y|space|round|no-repeat|initial|inherit;
+
+mask-type "whether an SVG <mask> element is treated as a luminance mask or as an alpha mask."
+:luminance|alpha|initial|inherit;
+
+mix-blend-mode "how an element's content should blend with its direct parent background."
+:normal|multiply|screen|overlay|darken|lighten|color-dodge|color-burn|difference|exclusion|hue|saturation|color|luminosity;
+
+object-fit "how an <img> or <video> should be resized to fit its container."
+:fill|contain|cover|scale-down|none|initial|inherit;
+
+object-position "used together with object-fit to specify how an <img> or <video> should be positioned with x/y coordinates inside its 'own content box'."
+:position|initial|inherit;
+
+outline-style "the style of an outline."
+=border-style;
+
+overflow "what should happen if content overflows an element's box."
+:visible|hidden|clip|scroll|auto|initial|inherit;
+
+overflow-anchor "makes it possible to turn off scroll anchoring."
+:auto|none|initial|inherit;
+
+overflow-wrap "whether or not the browser can break lines with long words, if they overflow the container."
+:normal|anywhere|break-word|initial|inherit;
+
+overflow-x "whether to clip the content, add a scroll bar, or display overflow content of a block-level element, when it overflows at the left and right "
+:visible|hidden|scroll|auto|initial|inherit;
+
+overflow-y "whether to clip the content, add a scroll bar, or display overflow content of a block-level element, when it overflows at the top and bottom edges."
+=overflow-x;
+
+overscroll-behavior "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary."
+:auto|contain|none|initial|inherit;
+
+overscroll-behavior-block "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in the block direction."
+=overscroll-behavior;
+
+overscroll-behavior-inline "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in the inline direction."
+=overscroll-behavior;
+
+overscroll-behavior-x "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in the x-direction."
+=overscroll-behavior;
+
+overscroll-behavior-y "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in y-direction."
+=overscroll-behavior;
+
+place-self "align individual grid items, and is a shorthand property for the following properties:"
+:auto|value|initial|inherit;
+
+pointer-events "whether or not an element reacts to pointer events."
+:auto|none|initial|inherit;
+
+position "positioning method used for an element (static, relative, absolute, fixed, or sticky)."
+:static_|absolute|fixed|relative|sticky|initial|inherit;
+
+resize "if (and how) an element is resizable by the user."
+:none|both|horizontal|vertical|initial|inherit;
+
+scroll-behavior "whether to smoothly animate the scroll position, instead of a straight jump, when the user clicks on a link within a scrollable box."
+:auto|smooth|initial|inherit;
+
+scroll-snap-stop "whether to scroll past elements or to stop and snap on the next element."
+:normal|always|initial|inherit;
+
+table-layout "the algorithm used to lay out table cells, rows, and columns."
+:auto|fixed|initial|inherit;
+
+text-align "the horizontal alignment of text in an element."
+:left|right|center|justify|initial|inherit;
+
+text-align-last "alignment for all last lines within the selected element. So, if you have a <div> with three paragraphs in it."
+:auto|left|right|center|justify|start|end|initial|inherit;
+
+text-decoration-line "the kind of text decoration to use (like underline, overline, line-through)."
+:none|underline|overline|line-through|initial|inherit;
+
+text-decoration-style "style of the text decoration (like solid, wavy, dotted, dashed, double)."
+:solid|double|dotted|dashed|wavy|initial|inherit;
+
+text-emphasis "apply emphasis marks to text."
+:none|filled|open|dot|circle|double-circle|triangle|sesame|string|color|initial|inherit;
+
+text-emphasis-position "the position of the emphasis marks (over, under, left, right)."
+:over|under|left|right|initial|inherit;
+
+text-emphasis-style "the style of emphasis marks."
+:none|filled|open|dot|circle|double-circle|triangle|sesame|color|initial|inherit;
+
+text-justify "the justification method of text when text-align is set to 'justify'."
+:auto|inter-word|inter-character|none|initial|inherit;
+
+text-orientation "the orientation of characters."
+:mixed|upright|sideways|sideways-right|use-glyph-orientation|initial|inherit;
+
+text-overflow "how overflowed content that is not displayed should be signaled to the user. It can be clipped, display an ellipsis (...), or display a custom string."
+:clip|ellipsis|string|initial|inherit;
+
+text-transform "controls the capitalization of text."
+:none|capitalize|uppercase|lowercase|initial|inherit;
+
+text-underline-position "the position of underline text decorations."
+:auto|under|from-font|left|right|initial|inherit;
+
+transform-style "how nested elements are rendered in 3D space."
+:flat|preserve-3d|initial|inherit;
+
+unicode-bidi "together with the direction property to set or return whether the text should be overridden to support multiple languages in the same document."
+:normal|embed|bidi-override|initial|inherit;
+
+user-select "whether the text of an element can be selected."
+:auto|none|text|all;
+
+vertical-align "the vertical alignment of an element."
+:baseline|length|sub|super_|top|text-top|middle|bottom|text-bottom|initial|inherit;
+
+visibility "whether or not an element is visible."
+:visible|hidden|collapse|initial|inherit;
+
+white-space "how white-space inside an element is handled."
+:normal|nowrap|pre|pre-line|pre-wrap|initial|inherit;
+
+word-break "how words should break when reaching the end of a line."
+:normal|break-all|keep-all|break-word|initial|inherit;
+
+word-wrap "allows long words to be able to be broken and wrap onto the next line."
+:normal|break-word|initial|inherit;
+
+writing-mode "whether lines of text are laid out horizontally or vertically."
+:horizontal-tb|vertical-rl|vertical-lr;
 );
