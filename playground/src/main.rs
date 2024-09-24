@@ -58,7 +58,12 @@ mod tests {
             .always()
             .break_before()
             .avoid()
+            .cursor()
+            .all_scroll()
             .to_string();
-        assert_eq!("break-after:always;break-before:avoid;", &result);
+        assert_eq!(
+            "break-after:always;break-before:avoid;cursor:all-scroll;",
+            &result
+        );
     }
 }
