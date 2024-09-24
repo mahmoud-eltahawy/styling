@@ -1,5 +1,6 @@
 use proc_macro2::{Ident, Punct, TokenStream, TokenTree};
 use proc_macro_error2::abort;
+use quote::format_ident;
 
 pub fn parse(input: proc_macro::TokenStream) -> Vec<StraightLine> {
     let input = TokenStream::from(input);
@@ -245,7 +246,7 @@ impl Line {
 #[derive(Debug, Clone)]
 pub struct Name {
     pub docs: Option<String>,
-    pub name_atoms: Vec<Ident>,
+    name_atoms: Vec<Ident>,
 }
 
 impl Name {
@@ -268,12 +269,20 @@ impl Name {
             .join("_")
     }
 
+    pub fn snake_ident(&self) -> Ident {
+        format_ident!("{}", self.snake())
+    }
+
     pub fn pascal(&self) -> String {
         self.name_atoms
             .iter()
             .map(|x| x.to_string())
             .map(|x| x[0..1].to_uppercase() + &x[1..])
             .collect()
+    }
+
+    pub fn pascal_ident(&self) -> Ident {
+        format_ident!("{}", self.pascal())
     }
 
     pub fn kebab(&self) -> String {

@@ -1,8 +1,9 @@
 extern crate proc_macro;
 
-use parsing::parse;
+use parsing::{parse, StraightLine};
 use proc_macro::TokenStream;
 use proc_macro_error2::proc_macro_error;
+use quote::quote;
 
 mod parsing;
 
@@ -13,6 +14,92 @@ fn clear_trailing_dash(input: String) -> String {
     input
 }
 
+fn props_snake_funs(lines: &[StraightLine]) -> proc_macro2::TokenStream {
+    lines
+        .iter()
+        .fold(proc_macro2::TokenStream::new(), |mut acc, x| {
+            let name_docs = x
+                .header
+                .docs
+                .as_ref()
+                .map(|x| format!("# {x}"))
+                .unwrap_or(String::from("# no description found"));
+            let pascal = x.header.pascal_ident();
+            let snake = x.header.snake_ident();
+            let props_docs = x
+                .attrs
+                .iter()
+                .fold(proc_macro2::TokenStream::new(), |mut acc, x| {
+                    let result = format!("- {}", x.snake());
+                    acc.extend(quote! {
+                        #[doc = #result]
+                    });
+                    acc
+                });
+            acc.extend(quote!(
+                #[doc = #name_docs]
+                #[doc = "## possible values"]
+                #props_docs
+                pub fn #snake(self) -> Style<StyleBaseState<AttributeGetter<#pascal>>> {{
+                    self.into_prebase(Box::new(ToAttribute::attribute))
+                }}
+            ));
+            acc
+        })
+}
+
+fn props_pascal_names(lines: &[StraightLine]) -> proc_macro2::TokenStream {
+    lines
+        .iter()
+        .map(|x| &x.header)
+        .fold(proc_macro2::TokenStream::new(), |mut acc, x| {
+            let x = x.pascal_ident();
+            acc.extend(quote!(#x(#x),));
+            acc
+        })
+}
+
+fn props_display_maps(lines: &[StraightLine]) -> proc_macro2::TokenStream {
+    lines
+        .iter()
+        .map(|x| &x.header)
+        .fold(proc_macro2::TokenStream::new(), |mut acc, x| {
+            let pascal = x.pascal_ident();
+            let snake = x.snake();
+            acc.extend(quote!(
+                Self::#pascal(x) => format!("{}:{};",#snake,x),
+            ));
+            acc
+        })
+}
+
+fn simple_attrs(lines: &[StraightLine]) -> proc_macro2::TokenStream {
+    let props_snake_funs = props_snake_funs(&lines);
+    let props_pascal_names = props_pascal_names(&lines);
+    let props_display_maps = props_display_maps(&lines);
+
+    quote!(
+        #[derive(Hash, Eq, PartialEq)]
+        pub enum SimpleAttribute {
+            #props_pascal_names
+        }
+
+        impl std::fmt::Display for SimpleAttribute {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let result = match self {
+                    #props_display_maps
+                };
+                write!(f, "{}", result)
+            }
+
+        }
+
+        impl Style<StyleBaseState<()>> {
+            #props_snake_funs
+        }
+    )
+}
+
 #[proc_macro]
 #[proc_macro_error]
 pub fn define_attributes(input: TokenStream) -> TokenStream {
@@ -20,67 +107,13 @@ pub fn define_attributes(input: TokenStream) -> TokenStream {
 
     let mut result = String::new();
 
-    let props_pascal_names = lines
-        .iter()
-        .map(|x| x.header.pascal())
-        .fold(String::new(), |acc, x| acc + &format!("{x}({x}),"));
+    let mut tokens = proc_macro2::TokenStream::new();
 
-    let props_snake_funs = lines.iter().fold(String::new(), |acc, x| {
-        let name_docs = x
-            .header
-            .docs
-            .as_ref()
-            .map(|x| format!("# {x}"))
-            .unwrap_or(String::from("# no description found"));
-        let pascal = x.header.pascal();
-        let snake = x.header.snake();
-        let props_docs = x
-            .attrs
-            .iter()
-            .fold(String::from("/// ## possible values"), |acc, x| {
-                acc + "\n" + &format!("/// - {}", x.snake())
-            });
-        acc + &format!(
-            r#"
-/// # {name_docs}
-{props_docs}
-pub fn {snake}(self) -> Style<StyleBaseState<AttributeGetter<{pascal}>>> {{
-    self.into_prebase(Box::new(ToAttribute::attribute))
-}}
-            "#
-        )
-    });
+    let simple_attrs = simple_attrs(&lines);
 
-    let props_display_maps = lines
-        .iter()
-        .map(|x| &x.header)
-        .fold(String::new(), |acc, x| {
-            let pascal = x.pascal();
-            let snake = x.snake();
-            acc + &format!(r#"Self::{pascal}(x) => format!("{snake}:{{x}};"),"#)
-        });
+    tokens.extend(simple_attrs);
 
-    let simple_attrs = format!(
-        r#"
-impl Style<StyleBaseState<()>> {{ {props_snake_funs} }}
-        
-#[derive(Hash, Eq, PartialEq)]
-pub enum SimpleAttribute {{
-    {props_pascal_names}
-}}
-
-impl std::fmt::Display for SimpleAttribute {{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
-        let result = match self {{
-            {props_display_maps}
-        }};
-        write!(f, "{{}}", result)
-    }}
-
-}}
-        "#
-    );
-    result.push_str(&simple_attrs);
+    result.push_str(&tokens.to_string());
 
     for line in lines.iter() {
         let name_pascal = line.header.pascal();
