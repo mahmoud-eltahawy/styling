@@ -1,6 +1,6 @@
 use styling::{styling, Home, Styling};
 
-const I: Styling<Home> = styling()
+const I: Styling<Home, 2> = styling()
     .accent_color()
     .hex(0xff0000)
     .accent_color()

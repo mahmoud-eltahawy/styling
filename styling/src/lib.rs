@@ -9,22 +9,22 @@
 //-------Styling type-----
 
 #[derive(Debug)]
-pub struct Styling<T>([Option<Attribute>; 100], PhantomData<T>);
+pub struct Styling<T, const SIZE: usize>([Option<Attribute>; SIZE], PhantomData<T>);
 
-pub const fn styling() -> Styling<Home> {
-    Styling([None; 100], PhantomData)
+pub const fn styling<const SIZE: usize>() -> Styling<Home, SIZE> {
+    Styling([None; SIZE], PhantomData)
 }
 //------------------------
 pub struct Home;
 pub struct AccentColor;
 pub struct FontSize;
 
-impl<T> Styling<T> {
-    const fn transform<S>(self) -> Styling<S> {
+impl<T, const SIZE: usize> Styling<T, SIZE> {
+    const fn transform<S>(self) -> Styling<S, SIZE> {
         let Self(inner, _) = self;
         Styling(inner, PhantomData)
     }
-    const fn add_attr(self, attr: Attribute) -> Styling<Home> {
+    const fn add_attr(self, attr: Attribute) -> Styling<Home, SIZE> {
         let index = self.target_index(&attr);
         let Self(mut inner, _) = self;
         inner[index] = Some(attr);
@@ -84,23 +84,23 @@ impl<T> Styling<T> {
 }
 //---------------stage functions ---------------
 
-impl Styling<Home> {
-    pub const fn accent_color(self) -> Styling<AccentColor> {
+impl<const SIZE: usize> Styling<Home, SIZE> {
+    pub const fn accent_color(self) -> Styling<AccentColor, SIZE> {
         self.transform()
     }
-    pub const fn font_size(self) -> Styling<FontSize> {
+    pub const fn font_size(self) -> Styling<FontSize, SIZE> {
         self.transform()
     }
 }
 
-impl Styling<AccentColor> {
-    pub const fn hex(self, hex: u32) -> Styling<Home> {
+impl<const SIZE: usize> Styling<AccentColor, SIZE> {
+    pub const fn hex(self, hex: u32) -> Styling<Home, SIZE> {
         self.add_attr(Attribute::AccentColor(Color::Hex(hex)))
     }
 }
 
-impl Styling<FontSize> {
-    pub const fn px(self, len: f32) -> Styling<Home> {
+impl<const SIZE: usize> Styling<FontSize, SIZE> {
+    pub const fn px(self, len: f32) -> Styling<Home, SIZE> {
         self.add_attr(Attribute::FontSize(Length::Px(len)))
     }
 }
@@ -159,7 +159,7 @@ impl Attribute {
 
 //--------- display ----------
 
-impl Display for Styling<Home> {
+impl<const SIZE: usize> Display for Styling<Home, SIZE> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let result = self
             .0
