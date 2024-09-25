@@ -2,14 +2,18 @@ use styling::{styling, Home, Styling};
 
 const I: Styling<Home> = styling()
     .accent_color()
-    .hex(3.5)
+    .hex(0xff0000)
     .accent_color()
-    .hex(5.33)
+    .hex(0x00ff00)
     .accent_color()
-    .hex(7.77);
+    .hex(0x0000ff)
+    .font_size()
+    .px(15.)
+    .font_size()
+    .px(16.);
 
 fn main() {
-    println!("{:#?}", I);
+    println!("{:#?}", I.to_string());
     //
 }
 
