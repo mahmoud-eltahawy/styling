@@ -1,7 +1,7 @@
 use crate::{AttributeGetter, PreBaseState, Style, StyleBaseState};
 use std::fmt::Display;
 
-#[derive(Hash, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub enum Length {
     //absolute
     Cm(u8),

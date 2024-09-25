@@ -61,7 +61,7 @@ macro_rules! color_impl {
 
 macro_rules! color_define {
     ($($color:ident),+) => {
-        #[derive(Hash, Eq, PartialEq)]
+        #[derive(Debug,Clone,Copy,Hash, Eq, PartialEq)]
         pub enum Color {
             Hex(u32),
             THex(u32),

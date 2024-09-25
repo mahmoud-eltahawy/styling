@@ -1,4 +1,9 @@
+use styling::experiment::styling;
+
 fn main() {
+    let i = styling().accent_color().hex(3).accent_color().hex(5);
+
+    println!("{:#?}", i);
     //
 }
 
