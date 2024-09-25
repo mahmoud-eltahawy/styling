@@ -46,28 +46,22 @@ impl<T, const SIZE: usize> Styling<T, SIZE> {
         None
     }
 
-    const fn first_none(&self, index: usize) -> Option<usize> {
+    const fn first_none(&self, index: usize) -> usize {
         let buffer = self.0;
         if index < buffer.len() {
             if buffer[index].is_none() {
-                return Some(index);
+                return index;
             } else {
                 return self.first_none(index + 1);
             }
         }
-        None
+        panic!("low capacity. consider increasing it");
     }
 
     const fn target_index(&self, other: &Attribute) -> usize {
         match self.does_exist(other, 0) {
             Some(index) => index,
-            None => {
-                //
-                match self.first_none(0) {
-                    Some(index) => index,
-                    None => panic!("we ran out of capacity"),
-                }
-            }
+            None => self.first_none(0),
         }
     }
 
