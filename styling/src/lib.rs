@@ -9,10 +9,10 @@
 //-------Styling type-----
 
 #[derive(Debug)]
-pub struct Styling<T, const SIZE: usize>([Option<Attribute>; SIZE], PhantomData<T>);
+pub struct Styling<T, const SIZE: usize>([Attribute; SIZE], PhantomData<T>);
 
 pub const fn styling<const SIZE: usize>() -> Styling<Home, SIZE> {
-    Styling([None; SIZE], PhantomData)
+    Styling([Attribute::None; SIZE], PhantomData)
 }
 //------------------------
 pub struct Home;
@@ -27,35 +27,28 @@ impl<T, const SIZE: usize> Styling<T, SIZE> {
     const fn add_attr(self, attr: Attribute) -> Styling<Home, SIZE> {
         let index = self.target_index(&attr);
         let Self(mut inner, _) = self;
-        inner[index] = Some(attr);
+        inner[index] = attr;
         Styling(inner, PhantomData)
     }
 
     const fn does_exist(&self, other: &Attribute, index: usize) -> Option<usize> {
-        let buffer = self.0;
-        if index < buffer.len() {
-            match buffer[index] {
-                Some(x) if x.eq(other) => {
-                    return Some(index);
-                }
-                _ => {
-                    return self.does_exist(other, index + 1);
-                }
-            }
+        if index >= self.0.len() {
+            return None;
+        };
+        if self.0[index].eq(other) {
+            Some(index)
+        } else {
+            self.does_exist(other, index + 1)
         }
-        None
     }
 
     const fn first_none(&self, index: usize) -> usize {
         let buffer = self.0;
-        if index < buffer.len() {
-            if buffer[index].is_none() {
-                return index;
-            } else {
-                return self.first_none(index + 1);
-            }
+        assert!(index < buffer.len(), "low capacity. consider increasing it");
+        match buffer[index] {
+            Attribute::None => index,
+            _ => self.first_none(index + 1),
         }
-        panic!("low capacity. consider increasing it");
     }
 
     const fn target_index(&self, other: &Attribute) -> usize {
@@ -67,8 +60,8 @@ impl<T, const SIZE: usize> Styling<T, SIZE> {
 
     const fn size_inner(&self, index: usize) -> usize {
         match self.0[index] {
-            Some(_) => self.size_inner(index + 1),
-            None => index,
+            Attribute::None => index,
+            _ => self.size_inner(index + 1),
         }
     }
 
@@ -139,6 +132,7 @@ pub enum Length {
 pub enum Attribute {
     AccentColor(Color),
     FontSize(Length),
+    None,
 }
 
 impl Attribute {
@@ -158,7 +152,7 @@ impl<const SIZE: usize> Display for Styling<Home, SIZE> {
         let result = self
             .0
             .iter()
-            .flatten()
+            .filter(|x| !matches!(x, Attribute::None))
             .fold(String::new(), |acc, x| acc + &x.to_string());
         write!(f, "{}", result)
     }
@@ -169,6 +163,7 @@ impl Display for Attribute {
         let result = match self {
             Attribute::AccentColor(x) => format!("accent-color:{x};"),
             Attribute::FontSize(x) => format!("font-size:{x};"),
+            Attribute::None => "".to_string(),
         };
         write!(f, "{}", result)
     }
