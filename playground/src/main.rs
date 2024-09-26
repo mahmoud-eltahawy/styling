@@ -1,6 +1,6 @@
 use styling::{styling, Home, Styling};
 
-const I: Styling<Home, 3> = styling()
+const STYLING: Styling<Home, 3> = styling()
     .accent_color()
     .hex(0xff0000)
     .accent_color()
@@ -16,8 +16,11 @@ const I: Styling<Home, 3> = styling()
     .margin()
     .cm(3.41);
 
+const SIZE: usize = STYLING.size();
+
 fn main() {
-    println!("{:#?}", I.to_string());
+    println!("css : {}", STYLING.to_string());
+    println!("size : {}", SIZE);
     //
 }
 

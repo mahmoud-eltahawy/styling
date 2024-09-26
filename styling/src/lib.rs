@@ -59,15 +59,12 @@ impl<T, const SIZE: usize> Styling<T, SIZE> {
         }
     }
 
-    const fn size_inner(&self, index: usize) -> usize {
-        match self.0[index] {
-            Attribute::None => index,
-            _ => self.size_inner(index + 1),
-        }
-    }
-
     pub const fn size(&self) -> usize {
-        self.size_inner(0)
+        let mut result = 0;
+        while result < self.0.len() && !matches!(self.0[result], Attribute::None) {
+            result += 1;
+        }
+        result
     }
 }
 
