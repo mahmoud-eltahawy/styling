@@ -1,12 +1,15 @@
-// mod attribute;
+mod attribute;
 // mod background;
 mod color;
 mod length;
 // mod simple_props;
 // pub mod svg;
 
-//----------stage definition---------------
-//-------Styling type-----
+use std::{fmt::Display, marker::PhantomData};
+
+use attribute::Attribute;
+use color::AccentColor;
+use length::{FontSize, Margin};
 
 #[derive(Debug)]
 pub struct Styling<T, const SIZE: usize>([Attribute; SIZE], PhantomData<T>);
@@ -14,7 +17,7 @@ pub struct Styling<T, const SIZE: usize>([Attribute; SIZE], PhantomData<T>);
 pub const fn styling<const SIZE: usize>() -> Styling<Home, SIZE> {
     Styling([Attribute::None; SIZE], PhantomData)
 }
-//------------------------
+
 pub struct Home;
 
 impl<T, const SIZE: usize> Styling<T, SIZE> {
@@ -67,7 +70,6 @@ impl<T, const SIZE: usize> Styling<T, SIZE> {
         self.size_inner(0)
     }
 }
-//---------------stage functions ---------------
 
 impl<const SIZE: usize> Styling<Home, SIZE> {
     pub const fn accent_color(self) -> Styling<AccentColor, SIZE> {
@@ -81,33 +83,6 @@ impl<const SIZE: usize> Styling<Home, SIZE> {
     }
 }
 
-//------------ attibutes -----------------
-
-use std::{fmt::Display, marker::PhantomData};
-
-use color::{AccentColor, Color};
-use length::{FontSize, Length, Margin};
-
-#[derive(Debug, Clone, Copy)]
-pub enum Attribute {
-    AccentColor(Color),
-    FontSize(Length),
-    Margin(Length),
-    None,
-}
-
-impl Attribute {
-    const fn eq(&self, other: &Self) -> bool {
-        matches!(
-            (self, other),
-            (Attribute::AccentColor(_), Attribute::AccentColor(_))
-                | (Attribute::FontSize(_), Attribute::FontSize(_))
-        )
-    }
-}
-
-//--------- display ----------
-
 impl<const SIZE: usize> Display for Styling<Home, SIZE> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let result = self
@@ -115,18 +90,6 @@ impl<const SIZE: usize> Display for Styling<Home, SIZE> {
             .iter()
             .filter(|x| !matches!(x, Attribute::None))
             .fold(String::new(), |acc, x| acc + &x.to_string());
-        write!(f, "{}", result)
-    }
-}
-
-impl Display for Attribute {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let result = match self {
-            Attribute::AccentColor(x) => format!("accent-color:{x};"),
-            Attribute::FontSize(x) => format!("font-size:{x};"),
-            Attribute::Margin(x) => format!("margin:{x};"),
-            Attribute::None => "".to_string(),
-        };
         write!(f, "{}", result)
     }
 }
