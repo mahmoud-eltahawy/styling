@@ -1,6 +1,6 @@
 use styling::{styling, Home, Styling};
 
-const I: Styling<Home, 2> = styling()
+const I: Styling<Home, 3> = styling()
     .accent_color()
     .hex(0xff0000)
     .accent_color()
@@ -10,9 +10,11 @@ const I: Styling<Home, 2> = styling()
     .accent_color()
     .aqua()
     .font_size()
-    .px(15.)
+    .px(16.)
     .font_size()
-    .px(16.);
+    .abs(18.)
+    .margin()
+    .cm(3.41);
 
 fn main() {
     println!("{:#?}", I.to_string());

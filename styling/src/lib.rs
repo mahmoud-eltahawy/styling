@@ -1,7 +1,7 @@
 // mod attribute;
 // mod background;
 mod color;
-// mod length;
+mod length;
 // mod simple_props;
 // pub mod svg;
 
@@ -16,7 +16,6 @@ pub const fn styling<const SIZE: usize>() -> Styling<Home, SIZE> {
 }
 //------------------------
 pub struct Home;
-pub struct FontSize;
 
 impl<T, const SIZE: usize> Styling<T, SIZE> {
     const fn transform<S>(self) -> Styling<S, SIZE> {
@@ -77,13 +76,8 @@ impl<const SIZE: usize> Styling<Home, SIZE> {
     pub const fn font_size(self) -> Styling<FontSize, SIZE> {
         self.transform()
     }
-}
-
-// impl<const SIZE: usize> Styling<AccentColor, SIZE> {}
-
-impl<const SIZE: usize> Styling<FontSize, SIZE> {
-    pub const fn px(self, len: f32) -> Styling<Home, SIZE> {
-        self.add_attr(Attribute::FontSize(Length::Px(len)))
+    pub const fn margin(self) -> Styling<Margin, SIZE> {
+        self.transform()
     }
 }
 
@@ -92,43 +86,13 @@ impl<const SIZE: usize> Styling<FontSize, SIZE> {
 use std::{fmt::Display, marker::PhantomData};
 
 use color::{AccentColor, Color};
-
-// #[derive(Debug, Clone, Copy)]
-// pub enum Color {
-//     Hex(u32),
-//     THex(u32),
-//     Rgb(f32, f32, f32),
-//     Rgba(f32, f32, f32, f32),
-//     Hsl(u16, f32, f32),
-//     Hsla(u16, f32, f32, f32),
-// }
-
-#[derive(Debug, Clone, Copy)]
-pub enum Length {
-    //absolute
-    Cm(f32),
-    Mm(f32),
-    In(f32),
-    Px(f32),
-    Abs(f32),
-    Pt(f32),
-    Pc(f32),
-    //relative
-    Em(f32),
-    Ex(f32),
-    Ch(f32),
-    Rem(f32),
-    Vw(f32),
-    Vh(f32),
-    Vmin(f32),
-    Vmax(f32),
-    Percent(f32),
-}
+use length::{FontSize, Length, Margin};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Attribute {
     AccentColor(Color),
     FontSize(Length),
+    Margin(Length),
     None,
 }
 
@@ -160,57 +124,9 @@ impl Display for Attribute {
         let result = match self {
             Attribute::AccentColor(x) => format!("accent-color:{x};"),
             Attribute::FontSize(x) => format!("font-size:{x};"),
+            Attribute::Margin(x) => format!("margin:{x};"),
             Attribute::None => "".to_string(),
         };
         write!(f, "{}", result)
     }
 }
-
-impl Display for Length {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Length::Cm(num) => write!(f, "{num}cm"),
-            Length::Mm(num) => write!(f, "{num}mm"),
-            Length::In(num) => write!(f, "{num}in"),
-            Length::Px(num) => write!(f, "{num}px"),
-            Length::Abs(num) => write!(f, "{num}"),
-            Length::Pt(num) => write!(f, "{num}pt"),
-            Length::Pc(num) => write!(f, "{num}pc"),
-            Length::Em(num) => write!(f, "{num}em"),
-            Length::Ex(num) => write!(f, "{num}ex"),
-            Length::Ch(num) => write!(f, "{num}ch"),
-            Length::Rem(num) => write!(f, "{num}rem"),
-            Length::Vw(num) => write!(f, "{num}vw"),
-            Length::Vh(num) => write!(f, "{num}vh"),
-            Length::Vmin(num) => write!(f, "{num}vmin"),
-            Length::Vmax(num) => write!(f, "{num}vmax"),
-            Length::Percent(num) => write!(f, "{num}%"),
-        }
-    }
-}
-
-// impl Display for Color {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         let result = match self {
-//             Color::Hex(c) => {
-//                 let result = format!("{c:#08x}")[2..].to_string();
-//                 format!("#{result}")
-//             }
-//             Color::THex(c) => {
-//                 let result = format!("{c:#08x}")[2..].to_string();
-//                 format!("#{result}")
-//             }
-//             Color::Rgb(red, green, blue) => format!("rgb({red},{green},{blue})"),
-//             Color::Rgba(red, green, blue, opacity) => {
-//                 format!("rgba({red},{green},{blue},{})", opacity)
-//             }
-//             Color::Hsl(hue, saturation, lightness) => {
-//                 format!("hsl({hue},{saturation}%,{lightness}%)")
-//             }
-//             Color::Hsla(hue, saturation, lightness, opacity) => {
-//                 format!("hsl({hue},{saturation}%,{lightness}%,{})", opacity)
-//             }
-//         };
-//         write!(f, "{}", result)
-//     }
-// }

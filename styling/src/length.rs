@@ -1,26 +1,26 @@
-use crate::{AttributeGetter, PreBaseState, Style, StyleBaseState};
+use crate::{Attribute, Home, Styling};
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy)]
 pub enum Length {
     //absolute
-    Cm(u8),
-    Mm(u8),
-    In(u8),
-    Px(u8),
-    Abs(u8),
-    Pt(u8),
-    Pc(u8),
+    Cm(f32),
+    Mm(f32),
+    In(f32),
+    Px(f32),
+    Abs(f32),
+    Pt(f32),
+    Pc(f32),
     //relative
-    Em(u8),
-    Ex(u8),
-    Ch(u8),
-    Rem(u8),
-    Vw(u8),
-    Vh(u8),
-    Vmin(u8),
-    Vmax(u8),
-    Percent(u8),
+    Em(f32),
+    Ex(f32),
+    Ch(f32),
+    Rem(f32),
+    Vw(f32),
+    Vh(f32),
+    Vmin(f32),
+    Vmax(f32),
+    Percent(f32),
 }
 
 impl Display for Length {
@@ -47,63 +47,65 @@ impl Display for Length {
 }
 
 macro_rules! style_impl {
-    ($output:ident) => {
-        impl Style<$output<AttributeGetter<Length>>> {
-            pub fn px(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Px(num))
+    ($target:ident) => {
+        pub struct $target;
+
+        impl<const SIZE: usize> Styling<$target, SIZE> {
+            pub const fn px(self, len: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Px(len)))
             }
 
-            pub fn abs(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Abs(num))
+            pub const fn abs(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Abs(num)))
             }
 
-            pub fn cm(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Cm(num))
+            pub const fn cm(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Cm(num)))
             }
 
-            pub fn percent(self, num: u8) -> Style<$output<()>> {
-                debug_assert!(num <= 100, "percent number should be from 0 to 100");
-                self.base(Length::Percent(num))
+            pub const fn percent(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Percent(num)))
             }
 
-            pub fn mm(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Mm(num))
+            pub const fn mm(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Mm(num)))
             }
-            pub fn inch(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::In(num))
+            pub const fn inch(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::In(num)))
             }
-            pub fn pt(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Pt(num))
+            pub const fn pt(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Pt(num)))
             }
-            pub fn pc(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Pc(num))
+            pub const fn pc(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Pc(num)))
             }
-            pub fn em(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Em(num))
+            pub const fn em(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Em(num)))
             }
-            pub fn ex(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Ex(num))
+            pub const fn ex(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Ex(num)))
             }
-            pub fn ch(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Ch(num))
+            pub const fn ch(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Ch(num)))
             }
-            pub fn rem_(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Rem(num))
+            pub const fn rem_(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Rem(num)))
             }
-            pub fn vw(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Vw(num))
+            pub const fn vw(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Vw(num)))
             }
-            pub fn vh(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Vh(num))
+            pub const fn vh(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Vh(num)))
             }
-            pub fn vmin(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Vmin(num))
+            pub const fn vmin(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Vmin(num)))
             }
-            pub fn vmax(self, num: u8) -> Style<$output<()>> {
-                self.base(Length::Vmax(num))
+            pub const fn vmax(self, num: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::$target(Length::Vmax(num)))
             }
         }
     };
 }
 
-style_impl!(StyleBaseState);
+style_impl!(FontSize);
+style_impl!(Margin);
