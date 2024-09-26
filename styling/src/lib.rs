@@ -1,6 +1,6 @@
 // mod attribute;
 // mod background;
-// mod color;
+mod color;
 // mod length;
 // mod simple_props;
 // pub mod svg;
@@ -16,7 +16,6 @@ pub const fn styling<const SIZE: usize>() -> Styling<Home, SIZE> {
 }
 //------------------------
 pub struct Home;
-pub struct AccentColor;
 pub struct FontSize;
 
 impl<T, const SIZE: usize> Styling<T, SIZE> {
@@ -80,11 +79,7 @@ impl<const SIZE: usize> Styling<Home, SIZE> {
     }
 }
 
-impl<const SIZE: usize> Styling<AccentColor, SIZE> {
-    pub const fn hex(self, hex: u32) -> Styling<Home, SIZE> {
-        self.add_attr(Attribute::AccentColor(Color::Hex(hex)))
-    }
-}
+// impl<const SIZE: usize> Styling<AccentColor, SIZE> {}
 
 impl<const SIZE: usize> Styling<FontSize, SIZE> {
     pub const fn px(self, len: f32) -> Styling<Home, SIZE> {
@@ -96,15 +91,17 @@ impl<const SIZE: usize> Styling<FontSize, SIZE> {
 
 use std::{fmt::Display, marker::PhantomData};
 
-#[derive(Debug, Clone, Copy)]
-pub enum Color {
-    Hex(u32),
-    THex(u32),
-    Rgb(f32, f32, f32),
-    Rgba(f32, f32, f32, f32),
-    Hsl(u16, f32, f32),
-    Hsla(u16, f32, f32, f32),
-}
+use color::{AccentColor, Color};
+
+// #[derive(Debug, Clone, Copy)]
+// pub enum Color {
+//     Hex(u32),
+//     THex(u32),
+//     Rgb(f32, f32, f32),
+//     Rgba(f32, f32, f32, f32),
+//     Hsl(u16, f32, f32),
+//     Hsla(u16, f32, f32, f32),
+// }
 
 #[derive(Debug, Clone, Copy)]
 pub enum Length {
@@ -192,28 +189,28 @@ impl Display for Length {
     }
 }
 
-impl Display for Color {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let result = match self {
-            Color::Hex(c) => {
-                let result = format!("{c:#08x}")[2..].to_string();
-                format!("#{result}")
-            }
-            Color::THex(c) => {
-                let result = format!("{c:#08x}")[2..].to_string();
-                format!("#{result}")
-            }
-            Color::Rgb(red, green, blue) => format!("rgb({red},{green},{blue})"),
-            Color::Rgba(red, green, blue, opacity) => {
-                format!("rgba({red},{green},{blue},{})", opacity)
-            }
-            Color::Hsl(hue, saturation, lightness) => {
-                format!("hsl({hue},{saturation}%,{lightness}%)")
-            }
-            Color::Hsla(hue, saturation, lightness, opacity) => {
-                format!("hsl({hue},{saturation}%,{lightness}%,{})", opacity)
-            }
-        };
-        write!(f, "{}", result)
-    }
-}
+// impl Display for Color {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         let result = match self {
+//             Color::Hex(c) => {
+//                 let result = format!("{c:#08x}")[2..].to_string();
+//                 format!("#{result}")
+//             }
+//             Color::THex(c) => {
+//                 let result = format!("{c:#08x}")[2..].to_string();
+//                 format!("#{result}")
+//             }
+//             Color::Rgb(red, green, blue) => format!("rgb({red},{green},{blue})"),
+//             Color::Rgba(red, green, blue, opacity) => {
+//                 format!("rgba({red},{green},{blue},{})", opacity)
+//             }
+//             Color::Hsl(hue, saturation, lightness) => {
+//                 format!("hsl({hue},{saturation}%,{lightness}%)")
+//             }
+//             Color::Hsla(hue, saturation, lightness, opacity) => {
+//                 format!("hsl({hue},{saturation}%,{lightness}%,{})", opacity)
+//             }
+//         };
+//         write!(f, "{}", result)
+//     }
+// }

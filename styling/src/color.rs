@@ -1,57 +1,49 @@
+use crate::{Attribute, Home, Styling};
 use std::fmt::Display;
 
-use crate::{AttributeGetter, PreBaseState, StyleBaseState};
 use std::stringify;
-
-use super::Style;
 
 use paste::paste;
 
 macro_rules! color_impl {
     ($($color:ident),+) => {
         paste! {
-        impl Style<StyleBaseState<AttributeGetter<Color>>> {
-            pub fn hex(self, hex: u32) -> Style<StyleBaseState<()>> {
-                self.base(Color::Hex(hex))
+        pub struct AccentColor;
+
+        impl<const SIZE: usize> Styling<AccentColor, SIZE> {
+            pub const fn hex(self, hex: u32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::AccentColor(Color::Hex(hex)))
             }
 
-            pub fn t_hex(self, hex: u32) -> Style<StyleBaseState<()>> {
-                self.base(Color::THex(hex))
+            pub const fn t_hex(self, hex: u32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::AccentColor(Color::THex(hex)))
             }
 
-            pub fn rgb(self, red: u8, green: u8, blue: u8) -> Style<StyleBaseState<()>> {
-                self.base(Color::Rgb(red, green, blue))
+            pub const fn rgb(self, red: f32, green: f32, blue: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::AccentColor(Color::Rgb(red, green, blue)))
             }
 
-            pub fn rgba(self, red: u8, green: u8, blue: u8, opacity: u8) -> Style<StyleBaseState<()>> {
-                debug_assert!(opacity <= 100, "opacity is from 0 to 100 not from 0 to 1");
-                self.base(Color::Rgba(red, green, blue, opacity))
+            pub const fn rgba(self, red: f32, green: f32, blue: f32, opacity: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::AccentColor(Color::Rgba(red, green, blue, opacity)))
             }
 
-            pub fn hsl(self, hue: u16, saturation: u8, lightness: u8) -> Style<StyleBaseState<()>> {
-                debug_assert!(hue <= 360, "hue should be from 0 to 360");
-                debug_assert!(saturation <= 100, "saturation should be from 0 to 100");
-                debug_assert!(lightness <= 100, "lightness should be from 0 to 100");
-                self.base(Color::Hsl(hue, saturation, lightness))
+            pub const fn hsl(self, hue: u16, saturation: f32, lightness: f32) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::AccentColor(Color::Hsl(hue, saturation, lightness)))
             }
 
-            pub fn hsla(
+            pub const fn hsla(
                 self,
                 hue: u16,
-                saturation: u8,
-                lightness: u8,
-                opacity: u8,
-            ) -> Style<StyleBaseState<()>> {
-                debug_assert!(hue <= 360, "hue should be from 0 to 360");
-                debug_assert!(saturation <= 100, "saturation should be from 0 to 100");
-                debug_assert!(lightness <= 100, "lightness should be from 0 to 100");
-                debug_assert!(opacity <= 100, "opacity is from 0 to 100 not from 0 to 1");
-                self.base(Color::Hsla(hue, saturation, lightness, opacity))
+                saturation: f32,
+                lightness: f32,
+                opacity: f32,
+            ) -> Styling<Home, SIZE> {
+                self.add_attr(Attribute::AccentColor(Color::Hsla(hue, saturation, lightness, opacity)))
             }
 
             $(
-                pub fn [<$color:snake>](self) -> Style<StyleBaseState<()>> {
-                    self.base(Color::[<$color>])
+                pub const fn [<$color:snake>](self) -> Styling<Home, SIZE> {
+                    self.add_attr(Attribute::AccentColor(Color::[<$color>]))
                 }
             )*
         }
@@ -61,14 +53,15 @@ macro_rules! color_impl {
 
 macro_rules! color_define {
     ($($color:ident),+) => {
-        #[derive(Debug,Clone,Copy,Hash, Eq, PartialEq)]
+
+        #[derive(Debug, Clone, Copy)]
         pub enum Color {
             Hex(u32),
             THex(u32),
-            Rgb(u8, u8, u8),
-            Rgba(u8, u8, u8, u8),
-            Hsl(u16, u8, u8),
-            Hsla(u16, u8, u8, u8)
+            Rgb(f32, f32, f32),
+            Rgba(f32, f32, f32, f32),
+            Hsl(u16, f32, f32),
+            Hsla(u16, f32, f32, f32)
             $(,$color)*
         }
         impl Display for Color {
