@@ -21,6 +21,53 @@ pub const fn styling<const SIZE: usize>() -> Styling<Home, SIZE> {
 pub struct Home;
 
 impl<T, const SIZE: usize> Styling<T, SIZE> {
+    pub const fn merge<const OTHER_SIZE: usize, const SUM_SIZE: usize>(
+        self,
+        other: Styling<Home, OTHER_SIZE>,
+    ) -> Styling<Home, SUM_SIZE> {
+        let Self(arr1, _) = self;
+        let Styling(arr2, _) = other;
+        let mut result = [Attribute::None; SUM_SIZE];
+        assert!(
+            result.len() == arr1.len() + arr2.len(),
+            "make sure that new Styling capacity is the sum of the two merged values"
+        );
+        let mut i = 0;
+        while i < arr1.len() {
+            match arr1[i] {
+                Attribute::None => {
+                    break;
+                }
+                val => {
+                    result[i] = val;
+                }
+            }
+            i += 1;
+        }
+        let mut result = Styling(result, PhantomData);
+        let mut i = 0;
+        while i < arr2.len() {
+            match arr2[i] {
+                Attribute::None => {
+                    break;
+                }
+                val => {
+                    result = result.add_attr(val);
+                }
+            }
+            i += 1;
+        }
+        result
+    }
+
+    pub const fn size(&self) -> usize {
+        let mut result = 0;
+        while result < self.0.len() && !matches!(self.0[result], Attribute::None) {
+            result += 1;
+        }
+        result
+    }
+
     const fn transform<S>(self) -> Styling<S, SIZE> {
         let Self(inner, _) = self;
         Styling(inner, PhantomData)
@@ -32,15 +79,15 @@ impl<T, const SIZE: usize> Styling<T, SIZE> {
         Styling(inner, PhantomData)
     }
 
-    const fn does_exist(&self, other: &Attribute, index: usize) -> Option<usize> {
-        if index >= self.0.len() {
-            return None;
-        };
-        if self.0[index].eq(other) {
-            Some(index)
-        } else {
-            self.does_exist(other, index + 1)
+    const fn does_exist(&self, other: &Attribute) -> Option<usize> {
+        let mut index = 0;
+        while index < self.0.len() {
+            if self.0[index].eq(other) {
+                return Some(index);
+            };
+            index += 1
         }
+        None
     }
 
     const fn first_none(&self, index: usize) -> usize {
@@ -53,18 +100,10 @@ impl<T, const SIZE: usize> Styling<T, SIZE> {
     }
 
     const fn target_index(&self, other: &Attribute) -> usize {
-        match self.does_exist(other, 0) {
+        match self.does_exist(other) {
             Some(index) => index,
             None => self.first_none(0),
         }
-    }
-
-    pub const fn size(&self) -> usize {
-        let mut result = 0;
-        while result < self.0.len() && !matches!(self.0[result], Attribute::None) {
-            result += 1;
-        }
-        result
     }
 }
 

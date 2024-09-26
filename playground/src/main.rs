@@ -1,25 +1,29 @@
 use styling::{styling, Home, Styling};
 
-const STYLING: Styling<Home, 3> = styling()
+const STYLING1: Styling<Home, 3> = styling()
     .accent_color()
     .hex(0xff0000)
     .accent_color()
     .hex(0x00ff00)
     .accent_color()
-    .hex(0x0000ff)
-    .accent_color()
-    .aqua()
+    .hex(0x0000ff);
+
+const STYLING2: Styling<Home, 3> = styling()
     .font_size()
     .px(16.)
     .font_size()
     .abs(18.)
     .margin()
-    .cm(3.41);
+    .cm(3.44)
+    .accent_color()
+    .dark_red();
 
-const SIZE: usize = STYLING.size();
+const STYLING3: Styling<Home, 6> = STYLING1.merge::<3, 6>(STYLING2);
+
+const SIZE: usize = STYLING3.size();
 
 fn main() {
-    println!("css : {}", STYLING.to_string());
+    println!("css : {}", STYLING3);
     println!("size : {}", SIZE);
     //
 }
