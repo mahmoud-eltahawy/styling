@@ -90,19 +90,22 @@ impl<T, const SIZE: usize> Styling<T, SIZE> {
         None
     }
 
-    const fn first_none(&self, index: usize) -> usize {
+    const fn first_none(&self) -> usize {
         let buffer = self.0;
-        assert!(index < buffer.len(), "low capacity. consider increasing it");
-        match buffer[index] {
-            Attribute::None => index,
-            _ => self.first_none(index + 1),
+        let mut index = 0;
+        while index < buffer.len() {
+            if let Attribute::None = buffer[index] {
+                return index;
+            }
+            index += 1;
         }
+        panic!("not enough capacity");
     }
 
-    const fn target_index(&self, other: &Attribute) -> usize {
-        match self.does_exist(other) {
+    const fn target_index(&self, attr: &Attribute) -> usize {
+        match self.does_exist(attr) {
             Some(index) => index,
-            None => self.first_none(0),
+            None => self.first_none(),
         }
     }
 }
@@ -127,5 +130,40 @@ impl<const SIZE: usize> Display for Styling<Home, SIZE> {
             .filter(|x| !matches!(x, Attribute::None))
             .fold(String::new(), |acc, x| acc + &x.to_string());
         write!(f, "{}", result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{styling, Home, Styling};
+    #[test]
+    fn multiple_props() {
+        const STYLING1: Styling<Home, 3> = styling()
+            .margin()
+            .px(4.)
+            .font_size()
+            .px(16.)
+            .accent_color()
+            .rgb(100., 100., 100.);
+        let expected = "margin:4px;font-size:16px;accent-color:rgb(100,100,100);";
+        assert_eq!(String::from(expected), STYLING1.to_string());
+        //test cascading
+        const STYLING2: Styling<Home, 3> = styling()
+            .accent_color()
+            .red()
+            .accent_color()
+            .green()
+            .font_size()
+            .px(10.)
+            .accent_color()
+            .blue();
+        assert_eq!(
+            STYLING2.to_string(),
+            String::from("accent-color:Blue;font-size:10px;")
+        );
+        //test merging
+        const STYLING3: Styling<Home, 6> = STYLING1.merge::<3, 6>(STYLING2);
+        let expected = "margin:4px;font-size:10px;accent-color:Blue;";
+        assert_eq!(String::from(expected), STYLING3.to_string());
     }
 }
