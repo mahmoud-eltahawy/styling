@@ -1,4 +1,4 @@
-use styling::{merge, styling, Home, Styling};
+use styling::{merge, shrink, styling, Home, Styling};
 
 const STYLING1: Styling<Home, 3> = styling()
     .accent_color()
@@ -19,8 +19,10 @@ const STYLING2: Styling<Home, 4> = styling()
     .dark_red();
 
 fn main() {
-    let styling = merge!(STYLING1, STYLING2).to_string();
-    println!("css : {}", styling);
+    const STYLING: Styling<Home, 7> = merge!(STYLING1, STYLING2);
+    const SHRINK: Styling<Home, 3> = shrink!(STYLING);
+
+    println!("css : {}", STYLING);
     //
 }
 

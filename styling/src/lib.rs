@@ -29,21 +29,21 @@ macro_rules! merge {
     }};
 }
 
+#[macro_export]
+macro_rules! shrink {
+    ($base:ident) => {{
+        const SIZE: usize = $base.size();
+        $base.resize::<SIZE>()
+    }};
+}
+
 impl<T, const SIZE: usize> Styling<T, SIZE> {
-    pub const fn merge<const OTHER_SIZE: usize, const SUM_SIZE: usize>(
-        self,
-        other: Styling<Home, OTHER_SIZE>,
-    ) -> Styling<Home, SUM_SIZE> {
-        let Self(arr1, _) = self;
-        let Styling(arr2, _) = other;
-        let mut result = [Attribute::None; SUM_SIZE];
-        assert!(
-            result.len() == arr1.len() + arr2.len(),
-            "make sure that new Styling capacity is the sum of the two merged values"
-        );
+    pub const fn resize<const NEW_SIZE: usize>(self) -> Styling<Home, NEW_SIZE> {
+        let Self(arr, _) = self;
+        let mut result = [Attribute::None; NEW_SIZE];
         let mut i = 0;
-        while i < arr1.len() {
-            match arr1[i] {
+        while i < arr.len() {
+            match arr[i] {
                 Attribute::None => {
                     break;
                 }
@@ -53,20 +53,32 @@ impl<T, const SIZE: usize> Styling<T, SIZE> {
             }
             i += 1;
         }
-        let mut result = Styling(result, PhantomData);
+        Styling(result, PhantomData)
+    }
+    pub const fn merge<const OTHER_SIZE: usize, const SUM_SIZE: usize>(
+        self,
+        other: Styling<Home, OTHER_SIZE>,
+    ) -> Styling<Home, SUM_SIZE> {
+        let base_len = self.0.len();
+        let Styling(other, _) = other;
+        let mut base = self.resize::<SUM_SIZE>();
+        assert!(
+            base.0.len() == base_len + other.len(),
+            "make sure that new Styling capacity is the sum of the two merged values"
+        );
         let mut i = 0;
-        while i < arr2.len() {
-            match arr2[i] {
+        while i < other.len() {
+            match other[i] {
                 Attribute::None => {
                     break;
                 }
                 val => {
-                    result = result.add_attr(val);
+                    base = base.add_attr(val);
                 }
             }
             i += 1;
         }
-        result
+        base
     }
 
     pub const fn capacity(&self) -> usize {
@@ -186,5 +198,7 @@ mod tests {
             String::from(expected),
             merge!(STYLING1, STYLING2).to_string()
         );
+        //test shrinking
+        assert_eq!(3, shrink!(STYLING3).0.len());
     }
 }
