@@ -174,10 +174,15 @@ mod tests {
             STYLING2.to_string(),
             String::from("accent-color:Blue;font-size:10px;")
         );
-        //test merging
 
+        //test merging
         const STYLING3: Styling<Home, 6> = merge!(STYLING1, STYLING2);
         let expected = "margin:4px;font-size:10px;accent-color:Blue;";
         assert_eq!(String::from(expected), STYLING3.to_string());
+
+        //easy merge
+        let styling3 = merge!(STYLING1, STYLING2).to_string();
+        let expected = "margin:4px;font-size:10px;accent-color:Blue;";
+        assert_eq!(String::from(expected), styling3.to_string());
     }
 }

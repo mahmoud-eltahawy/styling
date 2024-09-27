@@ -18,13 +18,9 @@ const STYLING2: Styling<Home, 4> = styling()
     .accent_color()
     .dark_red();
 
-const STYLING3: Styling<Home, 7> = merge!(STYLING1, STYLING2);
-
-const SIZE: usize = STYLING3.size();
-
 fn main() {
-    println!("css : {}", STYLING3);
-    println!("size : {}", SIZE);
+    let styling = merge!(STYLING1, STYLING2).to_string();
+    println!("css : {}", styling);
     //
 }
 
