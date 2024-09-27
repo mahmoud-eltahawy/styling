@@ -2,8 +2,7 @@ use proc_macro2::{Ident, Punct, TokenStream, TokenTree};
 use proc_macro_error2::abort;
 use quote::format_ident;
 
-pub fn parse(input: proc_macro::TokenStream) -> Vec<StraightLine> {
-    let input = TokenStream::from(input);
+pub fn parse(input: TokenStream) -> Vec<StraightLine> {
     Block::parse(input).straight()
 }
 
