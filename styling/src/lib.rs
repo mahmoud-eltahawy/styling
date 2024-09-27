@@ -20,6 +20,15 @@ pub const fn styling<const SIZE: usize>() -> Styling<Home, SIZE> {
 
 pub struct Home;
 
+#[macro_export]
+macro_rules! merge {
+    ($base:ident,$other:ident) => {{
+        const OTHER_SIZE: usize = $other.capacity();
+        const SIZE_SUM: usize = OTHER_SIZE + $base.capacity();
+        $base.merge::<OTHER_SIZE, SIZE_SUM>($other)
+    }};
+}
+
 impl<T, const SIZE: usize> Styling<T, SIZE> {
     pub const fn merge<const OTHER_SIZE: usize, const SUM_SIZE: usize>(
         self,
@@ -58,6 +67,10 @@ impl<T, const SIZE: usize> Styling<T, SIZE> {
             i += 1;
         }
         result
+    }
+
+    pub const fn capacity(&self) -> usize {
+        self.0.len()
     }
 
     pub const fn size(&self) -> usize {
@@ -162,7 +175,8 @@ mod tests {
             String::from("accent-color:Blue;font-size:10px;")
         );
         //test merging
-        const STYLING3: Styling<Home, 6> = STYLING1.merge::<3, 6>(STYLING2);
+
+        const STYLING3: Styling<Home, 6> = merge!(STYLING1, STYLING2);
         let expected = "margin:4px;font-size:10px;accent-color:Blue;";
         assert_eq!(String::from(expected), STYLING3.to_string());
     }

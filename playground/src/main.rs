@@ -1,4 +1,4 @@
-use styling::{styling, Home, Styling};
+use styling::{merge, styling, Home, Styling};
 
 const STYLING1: Styling<Home, 3> = styling()
     .accent_color()
@@ -8,7 +8,7 @@ const STYLING1: Styling<Home, 3> = styling()
     .accent_color()
     .hex(0x0000ff);
 
-const STYLING2: Styling<Home, 3> = styling()
+const STYLING2: Styling<Home, 4> = styling()
     .font_size()
     .px(16.)
     .font_size()
@@ -18,7 +18,7 @@ const STYLING2: Styling<Home, 3> = styling()
     .accent_color()
     .dark_red();
 
-const STYLING3: Styling<Home, 6> = STYLING1.merge::<3, 6>(STYLING2);
+const STYLING3: Styling<Home, 7> = merge!(STYLING1, STYLING2);
 
 const SIZE: usize = STYLING3.size();
 
