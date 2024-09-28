@@ -1,11 +1,10 @@
-mod attribute;
 // mod background;
 mod color;
 mod length;
 mod simple_props;
 // pub mod svg;
 
-use attribute::Attribute;
+use simple_props::Attribute;
 use std::{fmt::Display, marker::PhantomData};
 
 #[derive(Debug)]

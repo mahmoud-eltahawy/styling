@@ -55,6 +55,7 @@ fn define_varients_types(lines: &[StraightLine]) -> TokenStream {
                 acc
             });
         acc.extend(quote!(
+            #[derive(Debug, Clone)]
             pub enum #header_pascal {
                 #varients_pascal
             }
@@ -118,12 +119,13 @@ pub(crate) fn define_attributes_impl(input: TokenStream) -> TokenStream {
     //         acc
     //     });
     // }
+    let main_attributes_types = main_attributes(&lines);
     let transformers = transformers(&lines);
     let varients_types = define_varients_types(&lines);
     let varients_display = display_varients_types(&lines);
 
     tokens.extend(quote!(
-
+        #main_attributes_types
         #varients_types
         #varients_display
 
@@ -132,4 +134,107 @@ pub(crate) fn define_attributes_impl(input: TokenStream) -> TokenStream {
         }
     ));
     tokens
+}
+
+fn main_attributes(lines: &[StraightLine]) -> TokenStream {
+    let simple_ones =
+        lines
+            .iter()
+            .map(|x| x.header.pascal_ident())
+            .fold(TokenStream::new(), |mut acc, x| {
+                acc.extend(quote! {
+                    #x(#x),
+                });
+                acc
+            });
+    let eq_attrs = lines
+        .iter()
+        .map(|x| x.header.pascal_ident())
+        .enumerate()
+        .fold(TokenStream::new(), |mut acc, (i, x)| {
+            let i = i + 12;
+            acc.extend(quote! {
+                #x(_) => #i,
+            });
+            acc
+        });
+    let attrs_display = lines
+        .iter()
+        .map(|x| &x.header)
+        .fold(TokenStream::new(), |mut acc, x| {
+            let pascal = x.pascal_ident();
+            let kebab = x.kebab();
+            acc.extend(quote! {
+                #pascal(x) => format!("{}:{};",#kebab,x),
+            });
+            acc
+        });
+    quote! {
+        #[derive(Debug, Clone)]
+        pub enum Attribute {
+            AccentColor(Color),
+            FontSize(Length),
+            Margin(Length),
+            Top(Length),
+            Bottom(Length),
+            Right(Length),
+            Left(Length),
+            Height(Length),
+            Width(Length),
+            Padding(Length),
+            BackgroundColor(Color),
+            BackgroundImage(String),
+            #simple_ones
+        }
+
+        impl Attribute {
+            fn repr(&self) -> usize {
+                use Attribute::*;
+                match self {
+                    AccentColor(_) => 0,
+                    FontSize(_) => 1,
+                    Margin(_) => 2,
+                    Top(_) => 3,
+                    Bottom(_) => 4,
+                    Right(_) => 5,
+                    Left(_) => 6,
+                    Height(_) => 7,
+                    Width(_) => 8,
+                    Padding(_) => 9,
+                    BackgroundColor(_) => 10,
+                    BackgroundImage(_) => 11,
+                    #eq_attrs
+                }
+            }
+
+            pub fn eq(&self, other: &Self) -> bool {
+                self.repr() == other.repr()
+            }
+        }
+
+        impl std::fmt::Display for Attribute {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                use Attribute::*;
+                let result = match self {
+                    AccentColor(x) => format!("accent-color:{x};"),
+                    FontSize(x) => format!("font-size:{x};"),
+                    Top(x) => format!("top:{x};"),
+                    Bottom(x) => format!("bottom:{x};"),
+                    Right(x) => format!("right:{x};"),
+                    Left(x) => format!("left:{x};"),
+                    Height(x) => format!("height:{x};"),
+                    Width(x) => format!("width:{x};"),
+                    Margin(x) => format!("margin:{x};"),
+                    Padding(x) => format!("padding:{x};"),
+                    BackgroundColor(x) => {
+                        format!("background-color:{x};")
+                    }
+                    BackgroundImage(x) => format!("background-image:url({x});"),
+                    #attrs_display
+                };
+                write!(f, "{}", result)
+            }
+        }
+
+    }
 }
