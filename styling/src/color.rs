@@ -5,14 +5,6 @@ use std::stringify;
 
 use paste::paste;
 
-pub struct AccentColor;
-
-impl ColorAttributer for AccentColor {
-    fn color(color: Color) -> Attribute {
-        Attribute::AccentColor(color)
-    }
-}
-
 pub trait ColorAttributer {
     fn color(color: Color) -> Attribute;
 }

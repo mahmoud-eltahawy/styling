@@ -46,21 +46,6 @@ impl Display for Length {
     }
 }
 
-pub struct FontSize;
-pub struct Margin;
-
-impl LengthAttributer for FontSize {
-    fn length(len: Length) -> Attribute {
-        Attribute::FontSize(len)
-    }
-}
-
-impl LengthAttributer for Margin {
-    fn length(len: Length) -> Attribute {
-        Attribute::Margin(len)
-    }
-}
-
 pub trait LengthAttributer {
     fn length(len: Length) -> Attribute;
 }
