@@ -5,6 +5,27 @@ use quote::quote;
 
 mod parsing;
 
+pub(crate) fn define_attributes_impl(input: TokenStream) -> TokenStream {
+    let lines = parse(input);
+
+    let mut tokens = TokenStream::new();
+
+    let main_attributes_types = main_attributes(&lines);
+    let transformers = transformers(&lines);
+    let varients_types = define_varients_types(&lines);
+    let varients_display = display_varients_types(&lines);
+    let varients_funs = simple_varients_funs(&lines);
+
+    tokens.extend(quote!(
+        #main_attributes_types
+        #varients_types
+        #varients_funs
+        #varients_display
+        #transformers
+    ));
+    tokens
+}
+
 fn clear_trailing_dash(input: String) -> String {
     if input.chars().last().is_some_and(|x| x == '_') {
         return input[0..input.len() - 1].to_string();
@@ -12,8 +33,31 @@ fn clear_trailing_dash(input: String) -> String {
     input
 }
 
-fn transformers(lines: &[StraightLine]) -> TokenStream {
+fn simple_varients_funs(lines: &[StraightLine]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, x| {
+        let pascal_header = x.header.pascal_ident();
+
+        let funs = x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+            let snake = x.snake_ident();
+            let pascal = x.pascal_ident();
+            acc.extend(quote! {
+                pub fn #snake(self) -> Styling<Home> {
+                    self.add_attr(Attribute::#pascal_header(#pascal_header::#pascal))
+                }
+            });
+            acc
+        });
+        acc.extend(quote! {
+            impl Styling<#pascal_header> {
+                #funs
+            }
+        });
+        acc
+    })
+}
+
+fn transformers(lines: &[StraightLine]) -> TokenStream {
+    let result = lines.iter().fold(TokenStream::new(), |mut acc, x| {
         let name_docs = x
             .header
             .docs
@@ -38,7 +82,12 @@ fn transformers(lines: &[StraightLine]) -> TokenStream {
             }
         ));
         acc
-    })
+    });
+    quote! {
+        impl Styling<Home> {
+            #result
+        }
+    }
 }
 
 fn define_varients_types(lines: &[StraightLine]) -> TokenStream {
@@ -88,52 +137,6 @@ fn display_varients_types(lines: &[StraightLine]) -> TokenStream {
         ));
         acc
     })
-}
-
-pub(crate) fn define_attributes_impl(input: TokenStream) -> TokenStream {
-    let lines = parse(input);
-
-    let mut tokens = TokenStream::new();
-
-    // for line in lines.iter() {
-    //     let header_pascal = line.header.pascal_ident();
-    //     let varients_pascal =
-    //         line.attrs
-    //             .iter()
-    //             .map(|x| x.pascal_ident())
-    //             .fold(TokenStream::new(), |mut acc, x| {
-    //                 acc.extend(quote! {
-    //                     #x,
-    //                 });
-    //                 acc
-    //             });
-
-    //     let varients_funs = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-    //         let pascal = x.pascal_ident();
-    //         let snake = x.snake_ident();
-    //         acc.extend(quote!(
-    //             pub fn #snake(self) -> Style<StyleBaseState<()>> {
-    //                 self.base(#header_pascal::#pascal)
-    //             }
-    //         ));
-    //         acc
-    //     });
-    // }
-    let main_attributes_types = main_attributes(&lines);
-    let transformers = transformers(&lines);
-    let varients_types = define_varients_types(&lines);
-    let varients_display = display_varients_types(&lines);
-
-    tokens.extend(quote!(
-        #main_attributes_types
-        #varients_types
-        #varients_display
-
-        impl Styling<Home> {
-            #transformers
-        }
-    ));
-    tokens
 }
 
 fn main_attributes(lines: &[StraightLine]) -> TokenStream {
