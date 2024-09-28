@@ -46,66 +46,72 @@ impl Display for Length {
     }
 }
 
-macro_rules! style_impl {
-    ($target:ident) => {
-        pub struct $target;
+pub struct FontSize;
+pub struct Margin;
 
-        impl<const SIZE: usize> Styling<$target, SIZE> {
-            pub const fn px(self, len: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Px(len)))
-            }
-
-            pub const fn abs(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Abs(num)))
-            }
-
-            pub const fn cm(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Cm(num)))
-            }
-
-            pub const fn percent(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Percent(num)))
-            }
-
-            pub const fn mm(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Mm(num)))
-            }
-            pub const fn inch(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::In(num)))
-            }
-            pub const fn pt(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Pt(num)))
-            }
-            pub const fn pc(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Pc(num)))
-            }
-            pub const fn em(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Em(num)))
-            }
-            pub const fn ex(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Ex(num)))
-            }
-            pub const fn ch(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Ch(num)))
-            }
-            pub const fn rem_(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Rem(num)))
-            }
-            pub const fn vw(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Vw(num)))
-            }
-            pub const fn vh(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Vh(num)))
-            }
-            pub const fn vmin(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Vmin(num)))
-            }
-            pub const fn vmax(self, num: f32) -> Styling<Home, SIZE> {
-                self.add_attr(Attribute::$target(Length::Vmax(num)))
-            }
-        }
-    };
+impl LengthSubject for FontSize {
+    fn length(len: Length) -> Attribute {
+        Attribute::FontSize(len)
+    }
 }
 
-style_impl!(FontSize);
-style_impl!(Margin);
+impl LengthSubject for Margin {
+    fn length(len: Length) -> Attribute {
+        Attribute::Margin(len)
+    }
+}
+
+pub trait LengthSubject {
+    fn length(len: Length) -> Attribute;
+}
+
+impl<Subject: LengthSubject> Styling<Subject> {
+    pub fn px(self, len: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Px(len)))
+    }
+    pub fn abs(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Abs(num)))
+    }
+    pub fn cm(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Cm(num)))
+    }
+    pub fn percent(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Percent(num)))
+    }
+    pub fn mm(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Mm(num)))
+    }
+    pub fn inch(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::In(num)))
+    }
+    pub fn pt(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Pt(num)))
+    }
+    pub fn pc(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Pc(num)))
+    }
+    pub fn em(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Em(num)))
+    }
+    pub fn ex(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Ex(num)))
+    }
+    pub fn ch(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Ch(num)))
+    }
+    pub fn rem_(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Rem(num)))
+    }
+    pub fn vw(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Vw(num)))
+    }
+    pub fn vh(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Vh(num)))
+    }
+    pub fn vmin(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Vmin(num)))
+    }
+    pub fn vmax(self, num: f32) -> Styling<Home> {
+        self.add_attr(Subject::length(Length::Vmax(num)))
+    }
+}

@@ -1,28 +1,26 @@
-use styling::{merge, shrink, styling, Home, Styling};
-
-const STYLING1: Styling<Home, 3> = styling()
-    .accent_color()
-    .hex(0xff0000)
-    .accent_color()
-    .hex(0x00ff00)
-    .accent_color()
-    .hex(0x0000ff);
-
-const STYLING2: Styling<Home, 4> = styling()
-    .font_size()
-    .px(16.)
-    .font_size()
-    .abs(18.)
-    .margin()
-    .cm(3.44)
-    .accent_color()
-    .dark_red();
-
+use styling::styling;
 fn main() {
-    const STYLING: Styling<Home, 7> = merge!(STYLING1, STYLING2);
-    const SHRINK: Styling<Home, 3> = shrink!(STYLING);
+    let styling1 = styling()
+        .accent_color()
+        .hex(0xff0000)
+        .accent_color()
+        .hex(0x00ff00)
+        .accent_color()
+        .hex(0x0000ff);
 
-    println!("css : {}", STYLING);
+    let styling2 = styling()
+        .font_size()
+        .px(16.)
+        .font_size()
+        .abs(18.)
+        .margin()
+        .cm(3.44)
+        .accent_color()
+        .dark_red();
+
+    let styling = styling1.extend(styling2);
+
+    println!("css : {}", styling);
     //
 }
 

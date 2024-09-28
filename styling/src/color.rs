@@ -5,44 +5,54 @@ use std::stringify;
 
 use paste::paste;
 
+pub struct AccentColor;
+
+impl ColorSubject for AccentColor {
+    fn color(color: Color) -> Attribute {
+        Attribute::AccentColor(color)
+    }
+}
+
+pub trait ColorSubject {
+    fn color(color: Color) -> Attribute;
+}
+
 macro_rules! color_impl {
     ($($color:ident),+) => {
         paste! {
-        pub struct AccentColor;
-
-        impl<const SIZE: usize> Styling<AccentColor, SIZE> {
-            pub const fn hex(self, hex: u32) -> Styling<Home, SIZE> {
+        impl<Subject : ColorSubject> Styling<Subject> {
+            pub fn hex(self, hex: u32) -> Styling<Home> {
                 self.add_attr(Attribute::AccentColor(Color::Hex(hex)))
             }
 
-            pub const fn t_hex(self, hex: u32) -> Styling<Home, SIZE> {
+            pub fn t_hex(self, hex: u32) -> Styling<Home> {
                 self.add_attr(Attribute::AccentColor(Color::THex(hex)))
             }
 
-            pub const fn rgb(self, red: f32, green: f32, blue: f32) -> Styling<Home, SIZE> {
+            pub fn rgb(self, red: f32, green: f32, blue: f32) -> Styling<Home> {
                 self.add_attr(Attribute::AccentColor(Color::Rgb(red, green, blue)))
             }
 
-            pub const fn rgba(self, red: f32, green: f32, blue: f32, opacity: f32) -> Styling<Home, SIZE> {
+            pub fn rgba(self, red: f32, green: f32, blue: f32, opacity: f32) -> Styling<Home> {
                 self.add_attr(Attribute::AccentColor(Color::Rgba(red, green, blue, opacity)))
             }
 
-            pub const fn hsl(self, hue: u16, saturation: f32, lightness: f32) -> Styling<Home, SIZE> {
+            pub fn hsl(self, hue: u16, saturation: f32, lightness: f32) -> Styling<Home> {
                 self.add_attr(Attribute::AccentColor(Color::Hsl(hue, saturation, lightness)))
             }
 
-            pub const fn hsla(
+            pub fn hsla(
                 self,
                 hue: u16,
                 saturation: f32,
                 lightness: f32,
                 opacity: f32,
-            ) -> Styling<Home, SIZE> {
+            ) -> Styling<Home> {
                 self.add_attr(Attribute::AccentColor(Color::Hsla(hue, saturation, lightness, opacity)))
             }
 
             $(
-                pub const fn [<$color:snake>](self) -> Styling<Home, SIZE> {
+                pub fn [<$color:snake>](self) -> Styling<Home> {
                     self.add_attr(Attribute::AccentColor(Color::[<$color>]))
                 }
             )*

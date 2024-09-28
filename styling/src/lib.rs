@@ -12,147 +12,62 @@ use color::AccentColor;
 use length::{FontSize, Margin};
 
 #[derive(Debug)]
-pub struct Styling<T, const SIZE: usize>([Attribute; SIZE], PhantomData<T>);
+pub struct Styling<T>(Vec<Attribute>, PhantomData<T>);
 
-pub const fn styling<const SIZE: usize>() -> Styling<Home, SIZE> {
-    Styling([Attribute::None; SIZE], PhantomData)
+pub fn styling() -> Styling<Home> {
+    Styling(Vec::new(), PhantomData)
 }
 
 pub struct Home;
 
-#[macro_export]
-macro_rules! merge {
-    ($base:ident,$other:ident) => {{
-        const OTHER_SIZE: usize = $other.capacity();
-        const SIZE_SUM: usize = OTHER_SIZE + $base.capacity();
-        $base.merge::<OTHER_SIZE, SIZE_SUM>($other)
-    }};
-}
-
-#[macro_export]
-macro_rules! shrink {
-    ($base:ident) => {{
-        const SIZE: usize = $base.size();
-        $base.resize::<SIZE>()
-    }};
-}
-
-impl<T, const SIZE: usize> Styling<T, SIZE> {
-    pub const fn resize<const NEW_SIZE: usize>(self) -> Styling<Home, NEW_SIZE> {
-        let Self(arr, _) = self;
-        let mut result = [Attribute::None; NEW_SIZE];
-        let mut i = 0;
-        while i < arr.len() {
-            match arr[i] {
-                Attribute::None => {
-                    break;
-                }
-                val => {
-                    result[i] = val;
-                }
-            }
-            i += 1;
-        }
-        Styling(result, PhantomData)
+impl<T> Styling<T> {
+    fn transform<S>(self) -> Styling<S> {
+        let Self(inner, _) = self;
+        Styling(inner, PhantomData)
     }
-    pub const fn merge<const OTHER_SIZE: usize, const SUM_SIZE: usize>(
-        self,
-        other: Styling<Home, OTHER_SIZE>,
-    ) -> Styling<Home, SUM_SIZE> {
-        let base_len = self.0.len();
-        let Styling(other, _) = other;
-        let mut base = self.resize::<SUM_SIZE>();
-        assert!(
-            base.0.len() == base_len + other.len(),
-            "make sure that new Styling capacity is the sum of the two merged values"
-        );
-        let mut i = 0;
-        while i < other.len() {
-            match other[i] {
-                Attribute::None => {
-                    break;
-                }
-                val => {
-                    base = base.add_attr(val);
-                }
+    fn add_attr(self, attr: Attribute) -> Styling<Home> {
+        let Self(mut inner, _) = self;
+        match inner
+            .iter()
+            .enumerate()
+            .find(|(_, x)| x.eq(&attr))
+            .map(|(i, _)| i)
+        {
+            Some(index) => {
+                inner[index] = attr;
             }
-            i += 1;
+            None => inner.push(attr),
+        };
+        Styling(inner, PhantomData)
+    }
+}
+
+impl Styling<Home> {
+    pub fn extend(self, other: Styling<Home>) -> Styling<Home> {
+        let Styling(other, _) = other;
+        let mut base = self;
+        for x in other.into_iter() {
+            base = base.add_attr(x);
         }
         base
     }
 
-    pub const fn capacity(&self) -> usize {
-        self.0.len()
-    }
-
-    pub const fn size(&self) -> usize {
-        let mut result = 0;
-        while result < self.0.len() && !matches!(self.0[result], Attribute::None) {
-            result += 1;
-        }
-        result
-    }
-
-    const fn transform<S>(self) -> Styling<S, SIZE> {
-        let Self(inner, _) = self;
-        Styling(inner, PhantomData)
-    }
-    const fn add_attr(self, attr: Attribute) -> Styling<Home, SIZE> {
-        let index = self.target_index(&attr);
-        let Self(mut inner, _) = self;
-        inner[index] = attr;
-        Styling(inner, PhantomData)
-    }
-
-    const fn does_exist(&self, other: &Attribute) -> Option<usize> {
-        let mut index = 0;
-        while index < self.0.len() {
-            if self.0[index].eq(other) {
-                return Some(index);
-            };
-            index += 1
-        }
-        None
-    }
-
-    const fn first_none(&self) -> usize {
-        let buffer = self.0;
-        let mut index = 0;
-        while index < buffer.len() {
-            if let Attribute::None = buffer[index] {
-                return index;
-            }
-            index += 1;
-        }
-        panic!("not enough capacity");
-    }
-
-    const fn target_index(&self, attr: &Attribute) -> usize {
-        match self.does_exist(attr) {
-            Some(index) => index,
-            None => self.first_none(),
-        }
-    }
-}
-
-impl<const SIZE: usize> Styling<Home, SIZE> {
-    pub const fn accent_color(self) -> Styling<AccentColor, SIZE> {
+    pub fn accent_color(self) -> Styling<AccentColor> {
         self.transform()
     }
-    pub const fn font_size(self) -> Styling<FontSize, SIZE> {
+    pub fn font_size(self) -> Styling<FontSize> {
         self.transform()
     }
-    pub const fn margin(self) -> Styling<Margin, SIZE> {
+    pub fn margin(self) -> Styling<Margin> {
         self.transform()
     }
 }
 
-impl<const SIZE: usize> Display for Styling<Home, SIZE> {
+impl Display for Styling<Home> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let result = self
             .0
             .iter()
-            .filter(|x| !matches!(x, Attribute::None))
             .fold(String::new(), |acc, x| acc + &x.to_string());
         write!(f, "{}", result)
     }
@@ -160,10 +75,10 @@ impl<const SIZE: usize> Display for Styling<Home, SIZE> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{styling, Home, Styling};
+    use crate::styling;
     #[test]
     fn multiple_props() {
-        const STYLING1: Styling<Home, 3> = styling()
+        let styling1 = styling()
             .margin()
             .px(4.)
             .font_size()
@@ -171,34 +86,23 @@ mod tests {
             .accent_color()
             .rgb(100., 100., 100.);
         let expected = "margin:4px;font-size:16px;accent-color:rgb(100,100,100);";
-        assert_eq!(String::from(expected), STYLING1.to_string());
+        assert_eq!(String::from(expected), styling1.to_string());
         //test cascading
-        const STYLING2: Styling<Home, 3> = styling()
+        let styling2 = styling()
             .accent_color()
             .red()
-            .accent_color()
-            .green()
             .font_size()
             .px(10.)
             .accent_color()
             .blue();
         assert_eq!(
-            STYLING2.to_string(),
+            styling2.to_string(),
             String::from("accent-color:Blue;font-size:10px;")
         );
 
-        //test merging
-        const STYLING3: Styling<Home, 6> = merge!(STYLING1, STYLING2);
+        //test cascading merging
+        let styling3 = styling1.extend(styling2);
         let expected = "margin:4px;font-size:10px;accent-color:Blue;";
-        assert_eq!(String::from(expected), STYLING3.to_string());
-
-        //easy merge
-        let expected = "margin:4px;font-size:10px;accent-color:Blue;";
-        assert_eq!(
-            String::from(expected),
-            merge!(STYLING1, STYLING2).to_string()
-        );
-        //test shrinking
-        assert_eq!(3, shrink!(STYLING3).0.len());
+        assert_eq!(String::from(expected), styling3.to_string());
     }
 }

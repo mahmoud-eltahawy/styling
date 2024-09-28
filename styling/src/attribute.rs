@@ -21,7 +21,6 @@ pub enum Attribute {
     // BackgroundPosition(background::XYPosition),
     // BackgroundSize(background::Size),
     // SimpleAttribute(SimpleAttribute),
-    None,
 }
 
 impl Attribute {
@@ -61,7 +60,6 @@ impl Display for Attribute {
                 format!("background-color:{x};")
             }
             Attribute::BackgroundImage(x) => format!("background-image:url({x});"),
-            Attribute::None => "".to_string(),
             // Attribute::BackgroundPosition(x) => format!("background-position:{x};"),
             // Attribute::BackgroundPositionX(x) => format!("background-position-x:{x};"),
             // Attribute::BackgroundPositionY(x) => format!("background-position-y:{x};"),
