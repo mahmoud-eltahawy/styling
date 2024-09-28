@@ -12,7 +12,7 @@ fn clear_trailing_dash(input: String) -> String {
     input
 }
 
-fn props_snake_funs(lines: &[StraightLine]) -> TokenStream {
+fn transformers(lines: &[StraightLine]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, x| {
         let name_docs = x
             .header
@@ -33,64 +33,60 @@ fn props_snake_funs(lines: &[StraightLine]) -> TokenStream {
             #[doc = #name_docs]
             #[doc = "## possible values"]
             #props_docs
-            pub fn #snake(self) -> Style<StyleBaseState<AttributeGetter<#pascal>>> {
-                self.into_prebase(Box::new(ToAttribute::attribute))
+            pub fn #snake(self) -> Styling<#pascal> {
+                self.transform()
             }
         ));
         acc
     })
 }
 
-fn props_pascal_names(lines: &[StraightLine]) -> TokenStream {
-    lines
-        .iter()
-        .map(|x| &x.header)
-        .fold(TokenStream::new(), |mut acc, x| {
-            let x = x.pascal_ident();
-            acc.extend(quote!(#x(#x),));
-            acc
-        })
+fn define_varients_types(lines: &[StraightLine]) -> TokenStream {
+    lines.iter().fold(TokenStream::new(), |mut acc, line| {
+        let header_pascal = line.header.pascal_ident();
+        let varients_pascal = line
+            .attrs
+            .iter()
+            .fold(TokenStream::new(), |mut acc, varient| {
+                let pascal = varient.pascal_ident();
+                acc.extend(quote! {
+                    #pascal,
+                });
+                acc
+            });
+        acc.extend(quote!(
+            pub enum #header_pascal {
+                #varients_pascal
+            }
+        ));
+        acc
+    })
 }
 
-fn props_display_maps(lines: &[StraightLine]) -> TokenStream {
-    lines
-        .iter()
-        .map(|x| &x.header)
-        .fold(TokenStream::new(), |mut acc, x| {
+fn display_varients_types(lines: &[StraightLine]) -> TokenStream {
+    lines.iter().fold(TokenStream::new(), |mut acc, line| {
+        let header_pascal = line.header.pascal_ident();
+        let varients_display = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
             let pascal = x.pascal_ident();
-            let kebab = x.kebab();
+            let untrailed_kebab = clear_trailing_dash(x.kebab());
             acc.extend(quote!(
-                Self::#pascal(x) => format!("{}:{};",#kebab,x),
+                Self::#pascal => #untrailed_kebab,
             ));
             acc
-        })
-}
+        });
 
-fn simple_attrs(lines: &[StraightLine]) -> TokenStream {
-    let props_snake_funs = props_snake_funs(lines);
-    let props_pascal_names = props_pascal_names(lines);
-    let props_display_maps = props_display_maps(lines);
-
-    quote!(
-        #[derive(Hash, Eq, PartialEq)]
-        pub enum SimpleAttribute {
-            #props_pascal_names
-        }
-
-        impl std::fmt::Display for SimpleAttribute {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                let result = match self {
-                    #props_display_maps
-                };
-                write!(f, "{}", result)
+        acc.extend(quote!(
+            impl std::fmt::Display for #header_pascal {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    let result = match self {
+                        #varients_display
+                    };
+                    write!(f, "{}",result)
+                }
             }
-
-        }
-
-        impl Style<StyleBaseState<()>> {
-            #props_snake_funs
-        }
-    )
+        ));
+        acc
+    })
 }
 
 pub(crate) fn define_attributes_impl(input: TokenStream) -> TokenStream {
@@ -98,68 +94,42 @@ pub(crate) fn define_attributes_impl(input: TokenStream) -> TokenStream {
 
     let mut tokens = TokenStream::new();
 
-    let simple_attrs = simple_attrs(&lines);
+    // for line in lines.iter() {
+    //     let header_pascal = line.header.pascal_ident();
+    //     let varients_pascal =
+    //         line.attrs
+    //             .iter()
+    //             .map(|x| x.pascal_ident())
+    //             .fold(TokenStream::new(), |mut acc, x| {
+    //                 acc.extend(quote! {
+    //                     #x,
+    //                 });
+    //                 acc
+    //             });
 
-    tokens.extend(simple_attrs);
+    //     let varients_funs = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+    //         let pascal = x.pascal_ident();
+    //         let snake = x.snake_ident();
+    //         acc.extend(quote!(
+    //             pub fn #snake(self) -> Style<StyleBaseState<()>> {
+    //                 self.base(#header_pascal::#pascal)
+    //             }
+    //         ));
+    //         acc
+    //     });
+    // }
+    let transformers = transformers(&lines);
+    let varients_types = define_varients_types(&lines);
+    let varients_display = display_varients_types(&lines);
 
-    for line in lines.iter() {
-        let header_pascal = line.header.pascal_ident();
-        let varients_pascal =
-            line.attrs
-                .iter()
-                .map(|x| x.pascal_ident())
-                .fold(TokenStream::new(), |mut acc, x| {
-                    acc.extend(quote! {
-                        #x,
-                    });
-                    acc
-                });
+    tokens.extend(quote!(
 
-        let varients_maps = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-            let pascal = x.pascal_ident();
-            let cleared = clear_trailing_dash(x.kebab());
-            acc.extend(quote!(
-                Self::#pascal => #cleared,
-            ));
-            acc
-        });
+        #varients_types
+        #varients_display
 
-        let varients_funs = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-            let pascal = x.pascal_ident();
-            let snake = x.snake_ident();
-            acc.extend(quote!(
-                pub fn #snake(self) -> Style<StyleBaseState<()>> {
-                    self.base(#header_pascal::#pascal)
-                }
-            ));
-            acc
-        });
-
-        tokens.extend(quote!(
-            #[derive(Hash, Eq, PartialEq)]
-            pub enum #header_pascal {
-                 #varients_pascal
-            }
-
-            impl std::fmt::Display for #header_pascal {
-                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                    let result = match self {
-                        #varients_maps
-                    };
-                    write!(f, "{}",result)
-                }
-            }
-
-            impl ToAttribute for #header_pascal  {
-                fn attribute(self) -> Attribute {
-                    Attribute::SimpleAttribute(SimpleAttribute::#header_pascal(self))
-                }
-            }
-
-            impl Style<StyleBaseState<AttributeGetter<#header_pascal>>> {
-                #varients_funs
-            }
-        ));
-    }
+        impl Styling<Home> {
+            #transformers
+        }
+    ));
     tokens
 }

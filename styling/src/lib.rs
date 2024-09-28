@@ -2,7 +2,7 @@ mod attribute;
 // mod background;
 mod color;
 mod length;
-// mod simple_props;
+mod simple_props;
 // pub mod svg;
 
 use attribute::Attribute;
