@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::{color::Color, length::Length};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Attribute {
     AccentColor(Color),
     FontSize(Length),
@@ -15,7 +15,7 @@ pub enum Attribute {
     Width(Length),
     Padding(Length),
     BackgroundColor(Color),
-    BackgroundImage(&'static str),
+    BackgroundImage(String),
     // BackgroundPositionX(background::PositionX),
     // BackgroundPositionY(background::PositionY),
     // BackgroundPosition(background::XYPosition),
@@ -24,22 +24,25 @@ pub enum Attribute {
 }
 
 impl Attribute {
-    pub const fn eq(&self, other: &Self) -> bool {
-        matches!(
-            (self, other),
-            (Attribute::AccentColor(_), Attribute::AccentColor(_))
-                | (Attribute::FontSize(_), Attribute::FontSize(_))
-                | (Attribute::Top(_), Attribute::Top(_))
-                | (Attribute::Bottom(_), Attribute::Bottom(_))
-                | (Attribute::Right(_), Attribute::Right(_))
-                | (Attribute::Left(_), Attribute::Left(_))
-                | (Attribute::Height(_), Attribute::Height(_))
-                | (Attribute::Width(_), Attribute::Width(_))
-                | (Attribute::Margin(_), Attribute::Margin(_))
-                | (Attribute::Padding(_), Attribute::Padding(_))
-                | (Attribute::BackgroundColor(_), Attribute::BackgroundColor(_))
-                | (Attribute::BackgroundImage(_), Attribute::BackgroundImage(_))
-        )
+    fn repr(&self) -> u8 {
+        match self {
+            Attribute::AccentColor(_) => 0,
+            Attribute::FontSize(_) => 1,
+            Attribute::Margin(_) => 2,
+            Attribute::Top(_) => 3,
+            Attribute::Bottom(_) => 4,
+            Attribute::Right(_) => 5,
+            Attribute::Left(_) => 6,
+            Attribute::Height(_) => 7,
+            Attribute::Width(_) => 8,
+            Attribute::Padding(_) => 9,
+            Attribute::BackgroundColor(_) => 10,
+            Attribute::BackgroundImage(_) => 11,
+        }
+    }
+
+    pub fn eq(&self, other: &Self) -> bool {
+        self.repr() == other.repr()
     }
 }
 

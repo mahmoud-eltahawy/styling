@@ -7,20 +7,20 @@ use paste::paste;
 
 pub struct AccentColor;
 
-impl ColorSubject for AccentColor {
+impl ColorAttributer for AccentColor {
     fn color(color: Color) -> Attribute {
         Attribute::AccentColor(color)
     }
 }
 
-pub trait ColorSubject {
+pub trait ColorAttributer {
     fn color(color: Color) -> Attribute;
 }
 
 macro_rules! color_impl {
     ($($color:ident),+) => {
         paste! {
-        impl<Subject : ColorSubject> Styling<Subject> {
+        impl<Subject : ColorAttributer> Styling<Subject> {
             pub fn hex(self, hex: u32) -> Styling<Home> {
                 self.add_attr(Attribute::AccentColor(Color::Hex(hex)))
             }

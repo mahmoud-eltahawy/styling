@@ -49,23 +49,23 @@ impl Display for Length {
 pub struct FontSize;
 pub struct Margin;
 
-impl LengthSubject for FontSize {
+impl LengthAttributer for FontSize {
     fn length(len: Length) -> Attribute {
         Attribute::FontSize(len)
     }
 }
 
-impl LengthSubject for Margin {
+impl LengthAttributer for Margin {
     fn length(len: Length) -> Attribute {
         Attribute::Margin(len)
     }
 }
 
-pub trait LengthSubject {
+pub trait LengthAttributer {
     fn length(len: Length) -> Attribute;
 }
 
-impl<Subject: LengthSubject> Styling<Subject> {
+impl<Subject: LengthAttributer> Styling<Subject> {
     pub fn px(self, len: f32) -> Styling<Home> {
         self.add_attr(Subject::length(Length::Px(len)))
     }
