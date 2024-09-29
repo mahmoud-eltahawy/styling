@@ -9,5 +9,4 @@ edition.workspace = true
 
 
 [dependencies]
-paste = "1.0.15"
 simple_attr.workspace = true 

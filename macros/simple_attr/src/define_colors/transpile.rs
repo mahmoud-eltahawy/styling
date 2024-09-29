@@ -137,7 +137,7 @@ fn funs(names: Vec<parsing::Name>) -> TokenStream {
     funs
 }
 
-fn colors_display(names: &Vec<parsing::Name>) -> TokenStream {
+fn colors_display(names: &[parsing::Name]) -> TokenStream {
     let colors_display = names.iter().fold(TokenStream::new(), |mut acc, x| {
         let pascal_ident = x.0.pascal_ident();
         let pascal = x.0.pascal();
@@ -149,7 +149,7 @@ fn colors_display(names: &Vec<parsing::Name>) -> TokenStream {
     colors_display
 }
 
-fn pascal_colors(names: &Vec<parsing::Name>) -> TokenStream {
+fn pascal_colors(names: &[parsing::Name]) -> TokenStream {
     let pascal_colors =
         names
             .iter()

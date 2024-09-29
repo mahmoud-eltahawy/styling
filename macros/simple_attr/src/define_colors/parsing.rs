@@ -40,11 +40,8 @@ impl Block {
     }
 
     fn handle_punct(&mut self, punct: Punct) {
-        match punct.as_char() {
-            ':' => {
-                self.stage = Stage::Fresh;
-            }
-            _ => (),
+        if let ':' = punct.as_char() {
+            self.stage = Stage::Fresh;
         }
     }
 
