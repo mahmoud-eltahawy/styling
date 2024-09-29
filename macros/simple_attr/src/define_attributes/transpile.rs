@@ -76,14 +76,14 @@ fn transformers(lines: &[FinalLine]) -> TokenStream {
         let props_docs = match x {
             FinalLine::Straight(x) => x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
                 let result = format!("- {}", x.atoms.snake());
-                acc.extend(quote! {
-                    #[doc = #result]
-                });
+                acc.extend(quote! {#[doc = #result]});
                 acc
             }),
-            FinalLine::Group { .. } => quote! {
-                #[doc = "it is a color so it takes all colors attributes"]
-            },
+            FinalLine::Group { group, .. } => {
+                let group = group.to_string();
+                let docs = format!("it takes all {}'s attributes", group);
+                quote! {#[doc = #docs]}
+            }
         };
         acc.extend(quote!(
             #[doc = #name_docs]
@@ -184,9 +184,7 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
         match x {
             FinalLine::Straight(x) => {
                 let x = x.header.atoms.pascal_ident();
-                acc.extend(quote! {
-                    #x(#x),
-                });
+                acc.extend(quote! {#x(#x),});
             }
             FinalLine::Group { header, group } => {
                 let outer = header.atoms.pascal_ident();
@@ -194,9 +192,7 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
                     AttrGroup::Color => format_ident!("Color"),
                     AttrGroup::Length => format_ident!("Length"),
                 };
-                acc.extend(quote! {
-                    #outer(#inner),
-                });
+                acc.extend(quote! {#outer(#inner),});
             }
         }
         acc
@@ -210,9 +206,8 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
                 FinalLine::Group { header, .. } => header,
             };
             let x = x.atoms.pascal_ident();
-            acc.extend(quote! {
-                #x(_) => #i,
-            });
+            let i = i as u16;
+            acc.extend(quote! {#x(_) => #i,});
             acc
         });
     let attrs_display = lines.iter().fold(TokenStream::new(), |mut acc, x| {
@@ -222,9 +217,7 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
         };
         let pascal = x.atoms.pascal_ident();
         let kebab = x.kebab();
-        acc.extend(quote! {
-            #pascal(x) => format!("{}:{};",#kebab,x),
-        });
+        acc.extend(quote! {#pascal(x) => format!("{}:{};",#kebab,x),});
         acc
     });
     quote! {
@@ -234,7 +227,7 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
         }
 
         impl Attribute {
-            fn repr(&self) -> usize {
+            fn repr(&self) -> u16 {
                 use Attribute::*;
                 match self {
                     #eq_attrs
