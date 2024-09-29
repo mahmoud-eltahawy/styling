@@ -1,9 +1,11 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 
-use crate::{define_attributes::parsing::StraightLine, NameCases};
+use crate::{define_attributes::parsing::AttrGroup, NameCases};
 
-pub(crate) fn transpile(lines: Vec<StraightLine>) -> TokenStream {
+use super::parsing::FinalLine;
+
+pub(crate) fn transpile(lines: Vec<FinalLine>) -> TokenStream {
     let mut tokens = TokenStream::new();
 
     let main_attributes_types = main_attributes(&lines);
@@ -29,46 +31,60 @@ fn clear_trailing_dash(input: String) -> String {
     input
 }
 
-fn simple_varients_funs(lines: &[StraightLine]) -> TokenStream {
-    lines.iter().fold(TokenStream::new(), |mut acc, x| {
-        let pascal_header = x.header.atoms.pascal_ident();
+fn simple_varients_funs(lines: &[FinalLine]) -> TokenStream {
+    lines
+        .iter()
+        .flat_map(|x| match x {
+            FinalLine::Straight(line) => Some(line),
+            FinalLine::Group { .. } => None,
+        })
+        .fold(TokenStream::new(), |mut acc, x| {
+            let pascal_header = x.header.atoms.pascal_ident();
 
-        let funs = x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-            let snake = x.atoms.snake_ident();
-            let pascal = x.atoms.pascal_ident();
+            let funs = x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+                let snake = x.atoms.snake_ident();
+                let pascal = x.atoms.pascal_ident();
+                acc.extend(quote! {
+                    pub fn #snake(self) -> Styling<Home> {
+                        self.add_attr(Attribute::#pascal_header(#pascal_header::#pascal))
+                    }
+                });
+                acc
+            });
             acc.extend(quote! {
-                pub fn #snake(self) -> Styling<Home> {
-                    self.add_attr(Attribute::#pascal_header(#pascal_header::#pascal))
+                impl Styling<#pascal_header> {
+                    #funs
                 }
             });
             acc
-        });
-        acc.extend(quote! {
-            impl Styling<#pascal_header> {
-                #funs
-            }
-        });
-        acc
-    })
+        })
 }
 
-fn transformers(lines: &[StraightLine]) -> TokenStream {
+fn transformers(lines: &[FinalLine]) -> TokenStream {
     let result = lines.iter().fold(TokenStream::new(), |mut acc, x| {
-        let name_docs = x
-            .header
+        let header = match x {
+            FinalLine::Straight(x) => &x.header,
+            FinalLine::Group { header, .. } => header,
+        };
+        let name_docs = header
             .docs
             .as_ref()
             .map(|x| format!("# {x}"))
             .unwrap_or(String::from("# no description found"));
-        let pascal = x.header.atoms.pascal_ident();
-        let snake = x.header.atoms.snake_ident();
-        let props_docs = x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-            let result = format!("- {}", x.atoms.snake());
-            acc.extend(quote! {
-                #[doc = #result]
-            });
-            acc
-        });
+        let pascal = header.atoms.pascal_ident();
+        let snake = header.atoms.snake_ident();
+        let props_docs = match x {
+            FinalLine::Straight(x) => x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+                let result = format!("- {}", x.atoms.snake());
+                acc.extend(quote! {
+                    #[doc = #result]
+                });
+                acc
+            }),
+            FinalLine::Group { .. } => quote! {
+                #[doc = "it is a color so it takes all colors attributes"]
+            },
+        };
         acc.extend(quote!(
             #[doc = #name_docs]
             #[doc = "## possible values"]
@@ -86,97 +102,135 @@ fn transformers(lines: &[StraightLine]) -> TokenStream {
     }
 }
 
-fn define_varients_types(lines: &[StraightLine]) -> TokenStream {
+fn define_varients_types(lines: &[FinalLine]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, line| {
-        let header_pascal = line.header.atoms.pascal_ident();
-        let varients_pascal = line
-            .attrs
-            .iter()
-            .fold(TokenStream::new(), |mut acc, varient| {
-                let pascal = varient.atoms.pascal_ident();
-                acc.extend(quote! {
-                    #pascal,
-                });
-                acc
-            });
-        acc.extend(quote!(
-            #[derive(Debug, Clone)]
-            pub enum #header_pascal {
-                #varients_pascal
+        let quoted = match line {
+            FinalLine::Straight(line) => {
+                let header_pascal = line.header.atoms.pascal_ident();
+                let varients_pascal =
+                    line.attrs
+                        .iter()
+                        .fold(TokenStream::new(), |mut acc, varient| {
+                            let pascal = varient.atoms.pascal_ident();
+                            acc.extend(quote! {
+                                #pascal,
+                            });
+                            acc
+                        });
+                quote!(
+                    #[derive(Debug, Clone)]
+                    pub enum #header_pascal {
+                        #varients_pascal
+                    }
+                )
             }
-        ));
-        acc
-    })
-}
+            FinalLine::Group { header, group } => {
+                let header_pascal = header.atoms.pascal_ident();
+                let group_pascal_attributer = format_ident!("{group}Attributer");
+                let group_snake = format_ident!("{}", group.to_string().to_lowercase());
+                let group_pascal = format_ident!("{}", group.to_string());
+                quote! {
+                    // hello
+                    pub struct #header_pascal;
 
-fn display_varients_types(lines: &[StraightLine]) -> TokenStream {
-    lines.iter().fold(TokenStream::new(), |mut acc, line| {
-        let header_pascal = line.header.atoms.pascal_ident();
-        let varients_display = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-            let pascal = x.atoms.pascal_ident();
-            let untrailed_kebab = clear_trailing_dash(x.kebab());
-            acc.extend(quote!(
-                Self::#pascal => #untrailed_kebab,
-            ));
-            acc
-        });
+                    impl #group_pascal_attributer for #header_pascal {
+                        fn #group_snake(#group_snake: #group_pascal) -> Attribute {
+                            Attribute::#header_pascal(#group_snake)
+                        }
+                    }
 
-        acc.extend(quote!(
-            impl std::fmt::Display for #header_pascal {
-                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                    let result = match self {
-                        #varients_display
-                    };
-                    write!(f, "{}",result)
                 }
             }
-        ));
+        };
+        acc.extend(quoted);
         acc
     })
 }
 
-fn main_attributes(lines: &[StraightLine]) -> TokenStream {
-    let simple_ones = lines.iter().map(|x| x.header.atoms.pascal_ident()).fold(
-        TokenStream::new(),
-        |mut acc, x| {
-            acc.extend(quote! {
-                #x(#x),
+fn display_varients_types(lines: &[FinalLine]) -> TokenStream {
+    lines
+        .iter()
+        .flat_map(|x| match x {
+            FinalLine::Straight(line) => Some(line),
+            FinalLine::Group { .. } => None,
+        })
+        .fold(TokenStream::new(), |mut acc, line| {
+            let header_pascal = line.header.atoms.pascal_ident();
+            let varients_display = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+                let pascal = x.atoms.pascal_ident();
+                let untrailed_kebab = clear_trailing_dash(x.kebab());
+                acc.extend(quote!(
+                    Self::#pascal => #untrailed_kebab,
+                ));
+                acc
             });
+
+            acc.extend(quote!(
+                impl std::fmt::Display for #header_pascal {
+                    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        let result = match self {
+                            #varients_display
+                        };
+                        write!(f, "{}",result)
+                    }
+                }
+            ));
             acc
-        },
-    );
+        })
+}
+
+fn main_attributes(lines: &[FinalLine]) -> TokenStream {
+    let simple_ones = lines.iter().fold(TokenStream::new(), |mut acc, x| {
+        match x {
+            FinalLine::Straight(x) => {
+                let x = x.header.atoms.pascal_ident();
+                acc.extend(quote! {
+                    #x(#x),
+                });
+            }
+            FinalLine::Group { header, group } => {
+                let outer = header.atoms.pascal_ident();
+                let inner = match group {
+                    AttrGroup::Color => format_ident!("Color"),
+                    AttrGroup::Length => format_ident!("Length"),
+                };
+                acc.extend(quote! {
+                    #outer(#inner),
+                });
+            }
+        }
+        acc
+    });
     let eq_attrs = lines
         .iter()
-        .map(|x| x.header.atoms.pascal_ident())
         .enumerate()
         .fold(TokenStream::new(), |mut acc, (i, x)| {
-            let i = i + 12;
+            let x = match x {
+                FinalLine::Straight(x) => &x.header,
+                FinalLine::Group { header, .. } => header,
+            };
+            let x = x.atoms.pascal_ident();
+            let i = i + 12; //TODO
             acc.extend(quote! {
                 #x(_) => #i,
             });
             acc
         });
-    let attrs_display = lines
-        .iter()
-        .map(|x| &x.header)
-        .fold(TokenStream::new(), |mut acc, x| {
-            let pascal = x.atoms.pascal_ident();
-            let kebab = x.kebab();
-            acc.extend(quote! {
-                #pascal(x) => format!("{}:{};",#kebab,x),
-            });
-            acc
+    let attrs_display = lines.iter().fold(TokenStream::new(), |mut acc, x| {
+        let x = match x {
+            FinalLine::Straight(x) => &x.header,
+            FinalLine::Group { header, .. } => header,
+        };
+        let pascal = x.atoms.pascal_ident();
+        let kebab = x.kebab();
+        acc.extend(quote! {
+            #pascal(x) => format!("{}:{};",#kebab,x),
         });
+        acc
+    });
     quote! {
         #[derive(Debug, Clone)]
         pub enum Attribute {
-            AccentColor(Color),
-            FontSize(Length),
-            Margin(Length),
-            Top(Length),
-            Bottom(Length),
-            Right(Length),
-            Left(Length),
             Height(Length),
             Width(Length),
             Padding(Length),
@@ -189,13 +243,6 @@ fn main_attributes(lines: &[StraightLine]) -> TokenStream {
             fn repr(&self) -> usize {
                 use Attribute::*;
                 match self {
-                    AccentColor(_) => 0,
-                    FontSize(_) => 1,
-                    Margin(_) => 2,
-                    Top(_) => 3,
-                    Bottom(_) => 4,
-                    Right(_) => 5,
-                    Left(_) => 6,
                     Height(_) => 7,
                     Width(_) => 8,
                     Padding(_) => 9,
@@ -214,15 +261,8 @@ fn main_attributes(lines: &[StraightLine]) -> TokenStream {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 use Attribute::*;
                 let result = match self {
-                    AccentColor(x) => format!("accent-color:{x};"),
-                    FontSize(x) => format!("font-size:{x};"),
-                    Top(x) => format!("top:{x};"),
-                    Bottom(x) => format!("bottom:{x};"),
-                    Right(x) => format!("right:{x};"),
-                    Left(x) => format!("left:{x};"),
                     Height(x) => format!("height:{x};"),
                     Width(x) => format!("width:{x};"),
-                    Margin(x) => format!("margin:{x};"),
                     Padding(x) => format!("padding:{x};"),
                     BackgroundColor(x) => {
                         format!("background-color:{x};")

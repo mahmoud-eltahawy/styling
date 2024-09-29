@@ -1,10 +1,12 @@
+use std::fmt::Display;
+
 use proc_macro2::{Ident, Punct, TokenStream, TokenTree};
 use proc_macro_error2::abort;
 use quote::format_ident;
 
 use crate::NameCases;
 
-pub fn parse(input: TokenStream) -> Vec<StraightLine> {
+pub fn parse(input: TokenStream) -> Vec<FinalLine> {
     Block::parse(input).straight()
 }
 
@@ -28,10 +30,15 @@ impl Block {
             .and_then(|line| match &mut line.attrs {
                 Attrs::List(list) => list.last_mut(),
                 Attrs::Reference(name) => Some(name),
+                Attrs::Group(_) => None,
             })
     }
 
     fn handle_ident(&mut self, ident: Ident) {
+        if ident.to_string().as_str() == "is" {
+            self.stage = Stage::Grouping;
+            return;
+        }
         match self.stage {
             Stage::FreshLine => {
                 self.lines.push(Line::with(ident));
@@ -97,6 +104,24 @@ impl Block {
                     )
                 }
             },
+            Stage::Grouping => match self.lines.last_mut() {
+                Some(line) => {
+                    line.attrs = Attrs::Group(match ident.to_string().as_str() {
+                        "color" => AttrGroup::Color,
+                        "length" => AttrGroup::Length,
+                        _ => {
+                            abort!(ident, "unrecognized group");
+                        }
+                    });
+                    self.stage = Stage::AttrNaming;
+                }
+                None => {
+                    abort!(
+                        ident,
+                        "did not expect to be the first line to be grouping statement"
+                    )
+                }
+            },
         };
     }
 
@@ -131,8 +156,10 @@ impl Block {
                     None => abort!(literal, "can not add doc after : sign"),
                 },
                 Attrs::Reference(_) => abort!(literal, "can not doc reference!"),
+                Attrs::Group(_) => abort!(literal, "can not doc group!"),
             },
             FreshReference => abort!(literal, "can not doc reference!!"),
+            Grouping => abort!(literal, "can not doc group!"),
         };
         let docs = literal
             .to_string()
@@ -160,15 +187,15 @@ impl Block {
         })
     }
 
-    fn straight(self) -> Vec<StraightLine> {
+    fn straight(self) -> Vec<FinalLine> {
         let Block { stage: _, lines } = self;
         let ref_lines = lines.clone();
         lines
             .into_iter()
             .map(|line| {
                 let header = line.header.clone();
-                let attrs = match line.attrs {
-                    Attrs::List(list) => list,
+                match line.attrs {
+                    Attrs::List(attrs) => FinalLine::Straight(StraightLine { header, attrs }),
                     Attrs::Reference(ref_name) => {
                         let snake_ref_name = ref_name.atoms.snake();
                         let error_position = ref_name.atoms.last().unwrap();
@@ -177,7 +204,10 @@ impl Block {
                             .find(|x| x.header.atoms.snake() == snake_ref_name)
                         {
                             Some(line) => match &line.attrs {
-                                Attrs::List(list) => list.clone(),
+                                Attrs::List(attrs) => FinalLine::Straight(StraightLine {
+                                    header,
+                                    attrs: attrs.clone(),
+                                }),
                                 Attrs::Reference(name) => {
                                     let error_position =
                                         name.atoms.last().unwrap_or(error_position);
@@ -190,6 +220,10 @@ impl Block {
                                         )
                                     );
                                 }
+                                Attrs::Group(group) => FinalLine::Group {
+                                    header,
+                                    group: group.clone(),
+                                },
                             },
                             None => abort!(
                                 error_position,
@@ -197,11 +231,17 @@ impl Block {
                             ),
                         }
                     }
-                };
-                StraightLine { header, attrs }
+                    Attrs::Group(group) => FinalLine::Group { header, group },
+                }
             })
             .collect()
     }
+}
+
+#[derive(Debug)]
+pub enum FinalLine {
+    Straight(StraightLine),
+    Group { header: Name, group: AttrGroup },
 }
 
 #[derive(Debug)]
@@ -212,12 +252,30 @@ enum Stage {
     FirstAttrNaming,
     FreshReference,
     FreshAttrNaming,
+    Grouping,
 }
 
 #[derive(Debug, Clone)]
 enum Attrs {
     List(Vec<Name>),
     Reference(Name),
+    Group(AttrGroup),
+}
+
+#[derive(Debug, Clone)]
+pub enum AttrGroup {
+    Color,
+    Length,
+}
+
+impl Display for AttrGroup {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let result = match self {
+            AttrGroup::Color => "Color",
+            AttrGroup::Length => "Length",
+        };
+        write!(f, "{}", result)
+    }
 }
 
 #[derive(Debug, Clone)]

@@ -1,6 +1,17 @@
-use crate::{color::Color, length::Length, Home, Styling};
+use crate::{
+    color::{Color, ColorAttributer},
+    length::{Length, LengthAttributer},
+    Home, Styling,
+};
 
 simple_attr::define_attributes!(
+accent-color is color;
+font-size is length;
+top is length;
+bottom is length;
+left is length;
+right is length;
+margin is length;
 align-content "how flex lines are distributed along the cross axis in a flexbox container."
 :stretch|center|flex-start|flex-end|space-between|space-around|space-evenly|initial|inherit;
 

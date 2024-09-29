@@ -38,56 +38,6 @@ impl<T> Styling<T> {
 }
 
 pub struct Home;
-pub struct FontSize;
-pub struct Margin;
-pub struct Top;
-pub struct Bottom;
-pub struct Left;
-pub struct Right;
-
-pub struct AccentColor;
-
-impl color::ColorAttributer for AccentColor {
-    fn color(color: color::Color) -> Attribute {
-        Attribute::AccentColor(color)
-    }
-}
-
-impl length::LengthAttributer for FontSize {
-    fn length(len: length::Length) -> Attribute {
-        Attribute::FontSize(len)
-    }
-}
-
-impl length::LengthAttributer for Margin {
-    fn length(len: length::Length) -> Attribute {
-        Attribute::Margin(len)
-    }
-}
-
-impl length::LengthAttributer for Top {
-    fn length(len: length::Length) -> Attribute {
-        Attribute::Top(len)
-    }
-}
-
-impl length::LengthAttributer for Bottom {
-    fn length(len: length::Length) -> Attribute {
-        Attribute::Bottom(len)
-    }
-}
-
-impl length::LengthAttributer for Right {
-    fn length(len: length::Length) -> Attribute {
-        Attribute::Right(len)
-    }
-}
-
-impl length::LengthAttributer for Left {
-    fn length(len: length::Length) -> Attribute {
-        Attribute::Left(len)
-    }
-}
 
 impl Styling<Home> {
     pub fn extend(self, other: Styling<Home>) -> Styling<Home> {
@@ -97,28 +47,6 @@ impl Styling<Home> {
             base = base.add_attr(x);
         }
         base
-    }
-
-    pub fn accent_color(self) -> Styling<AccentColor> {
-        self.transform()
-    }
-    pub fn font_size(self) -> Styling<FontSize> {
-        self.transform()
-    }
-    pub fn margin(self) -> Styling<Margin> {
-        self.transform()
-    }
-    pub fn top(self) -> Styling<Top> {
-        self.transform()
-    }
-    pub fn bottom(self) -> Styling<Bottom> {
-        self.transform()
-    }
-    pub fn left(self) -> Styling<Left> {
-        self.transform()
-    }
-    pub fn right(self) -> Styling<Right> {
-        self.transform()
     }
 }
 
