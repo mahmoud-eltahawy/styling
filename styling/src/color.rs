@@ -13,12 +13,20 @@ macro_rules! color_impl {
     ($($color:ident),+) => {
         paste! {
         impl<Subject : ColorAttributer> Styling<Subject> {
-            pub fn hex(self, hex: u32) -> Styling<Home> {
-                self.add_attr(Attribute::AccentColor(Color::Hex(hex)))
+            pub fn hex(self, hex: &str) -> Styling<Home> {
+                assert!(hex.len() == 6,"hex str is 6 chars only");
+                let [a, b, c, d, e, f] = hex.chars().collect::<Vec<_>>()[..] else {
+                    unreachable!();
+                };
+                self.add_attr(Attribute::AccentColor(Color::Hex([a, b, c, d, e, f])))
             }
 
-            pub fn t_hex(self, hex: u32) -> Styling<Home> {
-                self.add_attr(Attribute::AccentColor(Color::THex(hex)))
+            pub fn t_hex(self, hex: &str) -> Styling<Home> {
+                assert!(hex.len() == 8,"t_hex str is 8 chars only");
+                let [a, b, c, d, e, f, g ,h] = hex.chars().collect::<Vec<_>>()[..] else {
+                    unreachable!();
+                };
+                self.add_attr(Attribute::AccentColor(Color::THex([a, b, c, d, e, f, g ,h])))
             }
 
             pub fn rgb(self, red: f32, green: f32, blue: f32) -> Styling<Home> {
@@ -29,13 +37,13 @@ macro_rules! color_impl {
                 self.add_attr(Attribute::AccentColor(Color::Rgba(red, green, blue, opacity)))
             }
 
-            pub fn hsl(self, hue: u16, saturation: f32, lightness: f32) -> Styling<Home> {
+            pub fn hsl(self, hue: f32, saturation: f32, lightness: f32) -> Styling<Home> {
                 self.add_attr(Attribute::AccentColor(Color::Hsl(hue, saturation, lightness)))
             }
 
             pub fn hsla(
                 self,
-                hue: u16,
+                hue: f32,
                 saturation: f32,
                 lightness: f32,
                 opacity: f32,
@@ -58,23 +66,23 @@ macro_rules! color_define {
 
         #[derive(Debug, Clone, Copy)]
         pub enum Color {
-            Hex(u32),
-            THex(u32),
+            Hex([char;6]),
+            THex([char;8]),
             Rgb(f32, f32, f32),
             Rgba(f32, f32, f32, f32),
-            Hsl(u16, f32, f32),
-            Hsla(u16, f32, f32, f32)
+            Hsl(f32, f32, f32),
+            Hsla(f32, f32, f32, f32)
             $(,$color)*
         }
         impl Display for Color {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 let result = match self {
                     Color::Hex(c) => {
-                        let result = format!("{c:#06x}")[2..].to_string();
+                        let result = c.map(|x| x.to_string()).join("");
                         format!("#{result}")
                     }
                     Color::THex(c) => {
-                        let result = format!("{c:#08x}")[2..].to_string();
+                        let result = c.map(|x| x.to_string()).join("");
                         format!("#{result}")
                     }
                     Color::Rgb(red, green, blue) => format!("rgb({red},{green},{blue})"),

@@ -8,11 +8,9 @@ fn main() {
         .left()
         .px(2.)
         .accent_color()
-        .hex(0xff0000)
+        .hex("ff0000")
         .accent_color()
-        .hex(0x00ff00)
-        .accent_color()
-        .hex(0x0000ff);
+        .hex("00ff00");
 
     let styling2 = styling()
         .font_size()
@@ -22,7 +20,7 @@ fn main() {
         .margin()
         .cm(3.44)
         .accent_color()
-        .dark_red();
+        .hex("0000ff");
 
     let styling = styling1.extend(styling2);
 
