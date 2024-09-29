@@ -2,6 +2,8 @@ use proc_macro2::{Ident, Punct, TokenStream, TokenTree};
 use proc_macro_error2::abort;
 use quote::format_ident;
 
+use crate::NameCases;
+
 pub fn parse(input: TokenStream) -> Vec<StraightLine> {
     Block::parse(input).straight()
 }
@@ -168,23 +170,23 @@ impl Block {
                 let attrs = match line.attrs {
                     Attrs::List(list) => list,
                     Attrs::Reference(ref_name) => {
-                        let snake_ref_name = ref_name.snake();
-                        let error_position = ref_name.name_atoms.last().unwrap();
+                        let snake_ref_name = ref_name.atoms.snake();
+                        let error_position = ref_name.atoms.last().unwrap();
                         match ref_lines
                             .iter()
-                            .find(|x| x.header.snake() == snake_ref_name)
+                            .find(|x| x.header.atoms.snake() == snake_ref_name)
                         {
                             Some(line) => match &line.attrs {
                                 Attrs::List(list) => list.clone(),
                                 Attrs::Reference(name) => {
                                     let error_position =
-                                        name.name_atoms.last().unwrap_or(error_position);
+                                        name.atoms.last().unwrap_or(error_position);
                                     abort!(
                                         error_position,
                                         format!(
                                             "{} references another reference {}",
                                             snake_ref_name,
-                                            name.snake()
+                                            name.atoms.snake()
                                         )
                                     );
                                 }
@@ -235,7 +237,7 @@ impl Line {
         Line {
             header: Name {
                 docs: None,
-                name_atoms: vec![ident],
+                atoms: vec![ident],
             },
             attrs: Attrs::List(Vec::new()),
         }
@@ -245,50 +247,53 @@ impl Line {
 #[derive(Debug, Clone)]
 pub struct Name {
     pub docs: Option<String>,
-    name_atoms: Vec<Ident>,
+    pub atoms: Vec<Ident>,
+}
+
+impl NameCases for Vec<Ident> {
+    fn snake(&self) -> String {
+        self.iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>()
+            .join("_")
+    }
+
+    fn snake_ident(&self) -> Ident {
+        format_ident!("{}", self.snake())
+    }
+
+    fn pascal(&self) -> String {
+        self.iter()
+            .map(|x| x.to_string())
+            .map(|x| x[0..1].to_uppercase() + &x[1..])
+            .collect()
+    }
+
+    fn pascal_ident(&self) -> Ident {
+        format_ident!("{}", self.pascal())
+    }
+
+    fn kebab(&self) -> String {
+        self.iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>()
+            .join("-")
+    }
 }
 
 impl Name {
     fn with(ident: Ident) -> Self {
         Self {
             docs: None,
-            name_atoms: vec![ident],
+            atoms: vec![ident],
         }
     }
 
     fn add(&mut self, other: Ident) {
-        self.name_atoms.push(other);
-    }
-
-    pub fn snake(&self) -> String {
-        self.name_atoms
-            .iter()
-            .map(|x| x.to_string())
-            .collect::<Vec<_>>()
-            .join("_")
-    }
-
-    pub fn snake_ident(&self) -> Ident {
-        format_ident!("{}", self.snake())
-    }
-
-    fn pascal(&self) -> String {
-        self.name_atoms
-            .iter()
-            .map(|x| x.to_string())
-            .map(|x| x[0..1].to_uppercase() + &x[1..])
-            .collect()
-    }
-
-    pub fn pascal_ident(&self) -> Ident {
-        format_ident!("{}", self.pascal())
+        self.atoms.push(other);
     }
 
     pub fn kebab(&self) -> String {
-        self.name_atoms
-            .iter()
-            .map(|x| x.to_string())
-            .collect::<Vec<_>>()
-            .join("-")
+        self.atoms.kebab()
     }
 }

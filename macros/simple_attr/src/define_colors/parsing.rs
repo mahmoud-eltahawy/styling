@@ -1,0 +1,79 @@
+use proc_macro2::{Ident, Punct, TokenStream, TokenTree};
+use proc_macro_error2::abort;
+
+pub fn parse(input: TokenStream) -> Vec<Name> {
+    Block::parse(input).into_vec()
+}
+
+#[derive(Debug, Clone)]
+struct Block {
+    stage: Stage,
+    names: Vec<Name>,
+}
+
+impl Block {
+    fn new() -> Self {
+        Self {
+            stage: Stage::Fresh,
+            names: Vec::new(),
+        }
+    }
+
+    fn handle_ident(&mut self, ident: Ident) {
+        match self.stage {
+            Stage::Fresh => {
+                self.names.push(Name(vec![ident]));
+                self.stage = Stage::Naming;
+            }
+            Stage::Naming => match self.names.last_mut() {
+                Some(name) => {
+                    name.0.push(ident);
+                }
+                None => {
+                    abort!(
+                        ident,
+                        "did not expect to be the first name due to header naming state"
+                    );
+                }
+            },
+        }
+    }
+
+    fn handle_punct(&mut self, punct: Punct) {
+        match punct.as_char() {
+            ':' => {
+                self.stage = Stage::Fresh;
+            }
+            _ => (),
+        }
+    }
+
+    fn parse(input: TokenStream) -> Self {
+        input.into_iter().fold(Block::new(), |mut block, x| {
+            match x {
+                TokenTree::Ident(ident) => {
+                    block.handle_ident(ident);
+                }
+                TokenTree::Punct(x) => {
+                    block.handle_punct(x);
+                }
+                TokenTree::Literal(_) | TokenTree::Group(_) => unreachable!(),
+            };
+            block
+        })
+    }
+
+    fn into_vec(self) -> Vec<Name> {
+        let Self { stage: _, names } = self;
+        names
+    }
+}
+
+#[derive(Debug, Clone)]
+enum Stage {
+    Fresh,
+    Naming,
+}
+
+#[derive(Debug, Clone)]
+pub struct Name(pub Vec<Ident>);

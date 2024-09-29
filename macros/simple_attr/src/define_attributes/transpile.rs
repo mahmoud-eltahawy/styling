@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::define_attributes::parsing::StraightLine;
+use crate::{define_attributes::parsing::StraightLine, NameCases};
 
 pub(crate) fn transpile(lines: Vec<StraightLine>) -> TokenStream {
     let mut tokens = TokenStream::new();
@@ -31,11 +31,11 @@ fn clear_trailing_dash(input: String) -> String {
 
 fn simple_varients_funs(lines: &[StraightLine]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, x| {
-        let pascal_header = x.header.pascal_ident();
+        let pascal_header = x.header.atoms.pascal_ident();
 
         let funs = x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-            let snake = x.snake_ident();
-            let pascal = x.pascal_ident();
+            let snake = x.atoms.snake_ident();
+            let pascal = x.atoms.pascal_ident();
             acc.extend(quote! {
                 pub fn #snake(self) -> Styling<Home> {
                     self.add_attr(Attribute::#pascal_header(#pascal_header::#pascal))
@@ -60,10 +60,10 @@ fn transformers(lines: &[StraightLine]) -> TokenStream {
             .as_ref()
             .map(|x| format!("# {x}"))
             .unwrap_or(String::from("# no description found"));
-        let pascal = x.header.pascal_ident();
-        let snake = x.header.snake_ident();
+        let pascal = x.header.atoms.pascal_ident();
+        let snake = x.header.atoms.snake_ident();
         let props_docs = x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-            let result = format!("- {}", x.snake());
+            let result = format!("- {}", x.atoms.snake());
             acc.extend(quote! {
                 #[doc = #result]
             });
@@ -88,12 +88,12 @@ fn transformers(lines: &[StraightLine]) -> TokenStream {
 
 fn define_varients_types(lines: &[StraightLine]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, line| {
-        let header_pascal = line.header.pascal_ident();
+        let header_pascal = line.header.atoms.pascal_ident();
         let varients_pascal = line
             .attrs
             .iter()
             .fold(TokenStream::new(), |mut acc, varient| {
-                let pascal = varient.pascal_ident();
+                let pascal = varient.atoms.pascal_ident();
                 acc.extend(quote! {
                     #pascal,
                 });
@@ -111,9 +111,9 @@ fn define_varients_types(lines: &[StraightLine]) -> TokenStream {
 
 fn display_varients_types(lines: &[StraightLine]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, line| {
-        let header_pascal = line.header.pascal_ident();
+        let header_pascal = line.header.atoms.pascal_ident();
         let varients_display = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-            let pascal = x.pascal_ident();
+            let pascal = x.atoms.pascal_ident();
             let untrailed_kebab = clear_trailing_dash(x.kebab());
             acc.extend(quote!(
                 Self::#pascal => #untrailed_kebab,
@@ -136,19 +136,18 @@ fn display_varients_types(lines: &[StraightLine]) -> TokenStream {
 }
 
 fn main_attributes(lines: &[StraightLine]) -> TokenStream {
-    let simple_ones =
-        lines
-            .iter()
-            .map(|x| x.header.pascal_ident())
-            .fold(TokenStream::new(), |mut acc, x| {
-                acc.extend(quote! {
-                    #x(#x),
-                });
-                acc
+    let simple_ones = lines.iter().map(|x| x.header.atoms.pascal_ident()).fold(
+        TokenStream::new(),
+        |mut acc, x| {
+            acc.extend(quote! {
+                #x(#x),
             });
+            acc
+        },
+    );
     let eq_attrs = lines
         .iter()
-        .map(|x| x.header.pascal_ident())
+        .map(|x| x.header.atoms.pascal_ident())
         .enumerate()
         .fold(TokenStream::new(), |mut acc, (i, x)| {
             let i = i + 12;
@@ -161,7 +160,7 @@ fn main_attributes(lines: &[StraightLine]) -> TokenStream {
         .iter()
         .map(|x| &x.header)
         .fold(TokenStream::new(), |mut acc, x| {
-            let pascal = x.pascal_ident();
+            let pascal = x.atoms.pascal_ident();
             let kebab = x.kebab();
             acc.extend(quote! {
                 #pascal(x) => format!("{}:{};",#kebab,x),
