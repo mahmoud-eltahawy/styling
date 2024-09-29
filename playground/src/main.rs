@@ -13,6 +13,8 @@ fn main() {
         .hex("00ff00");
 
     let styling2 = styling()
+        .padding()
+        .px(5.)
         .font_size()
         .px(16.)
         .font_size()
@@ -20,7 +22,7 @@ fn main() {
         .margin()
         .cm(3.44)
         .accent_color()
-        .hex("0000ff");
+        .dark_red();
 
     let styling = styling1.extend(styling2);
 

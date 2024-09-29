@@ -210,7 +210,6 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
                 FinalLine::Group { header, .. } => header,
             };
             let x = x.atoms.pascal_ident();
-            let i = i + 12; //TODO
             acc.extend(quote! {
                 #x(_) => #i,
             });
@@ -231,11 +230,6 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
     quote! {
         #[derive(Debug, Clone)]
         pub enum Attribute {
-            Height(Length),
-            Width(Length),
-            Padding(Length),
-            BackgroundColor(Color),
-            BackgroundImage(String),
             #simple_ones
         }
 
@@ -243,11 +237,6 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
             fn repr(&self) -> usize {
                 use Attribute::*;
                 match self {
-                    Height(_) => 7,
-                    Width(_) => 8,
-                    Padding(_) => 9,
-                    BackgroundColor(_) => 10,
-                    BackgroundImage(_) => 11,
                     #eq_attrs
                 }
             }
@@ -261,13 +250,6 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 use Attribute::*;
                 let result = match self {
-                    Height(x) => format!("height:{x};"),
-                    Width(x) => format!("width:{x};"),
-                    Padding(x) => format!("padding:{x};"),
-                    BackgroundColor(x) => {
-                        format!("background-color:{x};")
-                    }
-                    BackgroundImage(x) => format!("background-image:url({x});"),
                     #attrs_display
                 };
                 write!(f, "{}", result)
