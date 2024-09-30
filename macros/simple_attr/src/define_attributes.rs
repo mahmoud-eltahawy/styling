@@ -1,9 +1,10 @@
+use parsing::parse;
 use proc_macro2::TokenStream;
+use transpile::transpile;
 
 mod parsing;
 mod transpile;
 
 pub(crate) fn define_attributes_impl(input: TokenStream) -> TokenStream {
-    let lines = parsing::parse(input);
-    transpile::transpile(lines)
+    transpile(parse(input))
 }
