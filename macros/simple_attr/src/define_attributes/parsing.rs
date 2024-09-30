@@ -2,7 +2,6 @@ use std::fmt::Display;
 
 use proc_macro2::{Ident, Punct, TokenStream, TokenTree};
 use proc_macro_error2::abort;
-use quote::format_ident;
 
 use crate::NameCases;
 
@@ -306,37 +305,6 @@ impl Line {
 pub struct Name {
     pub docs: Option<String>,
     pub atoms: Vec<Ident>,
-}
-
-impl NameCases for Vec<Ident> {
-    fn snake(&self) -> String {
-        self.iter()
-            .map(|x| x.to_string())
-            .collect::<Vec<_>>()
-            .join("_")
-    }
-
-    fn snake_ident(&self) -> Ident {
-        format_ident!("{}", self.snake())
-    }
-
-    fn pascal(&self) -> String {
-        self.iter()
-            .map(|x| x.to_string())
-            .map(|x| x[0..1].to_uppercase() + &x[1..])
-            .collect()
-    }
-
-    fn pascal_ident(&self) -> Ident {
-        format_ident!("{}", self.pascal())
-    }
-
-    fn kebab(&self) -> String {
-        self.iter()
-            .map(|x| x.to_string())
-            .collect::<Vec<_>>()
-            .join("-")
-    }
 }
 
 impl Name {
