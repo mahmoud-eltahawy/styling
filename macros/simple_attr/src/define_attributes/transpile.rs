@@ -12,17 +12,17 @@ pub(crate) fn transpile(lines: Vec<FinalLine>) -> TokenStream {
     let mut tokens = TokenStream::new();
 
     let main_attributes_types = main_attributes(&lines);
-    // let transformers = transformers(&lines);
+    let transformers = transformers(&lines);
     // let varients_types = define_varients_types(&lines);
     // let varients_display = display_varients_types(&lines);
     // let varients_funs = simple_varients_funs(&lines);
 
     tokens.extend(quote!(
         #main_attributes_types
+        #transformers
         // #varients_types
         // #varients_funs
         // #varients_display
-        // #transformers
     ));
     tokens
 }
@@ -61,48 +61,6 @@ pub(crate) fn transpile(lines: Vec<FinalLine>) -> TokenStream {
 //             });
 //             acc
 //         })
-// }
-
-// fn transformers(lines: &[FinalLine]) -> TokenStream {
-//     let result = lines.iter().fold(TokenStream::new(), |mut acc, x| {
-//         let header = match x {
-//             FinalLine::Straight(x) => &x.header,
-//             FinalLine::Group { header, .. } => header,
-//         };
-//         let name_docs = header
-//             .docs
-//             .as_ref()
-//             .map(|x| format!("# {x}"))
-//             .unwrap_or(String::from("# no description found"));
-//         let pascal = header.atoms.pascal_ident();
-//         let snake = header.atoms.snake_ident();
-//         let props_docs = match x {
-//             FinalLine::Straight(x) => x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-//                 let result = format!("- {}", x.atoms.snake());
-//                 acc.extend(quote! {#[doc = #result]});
-//                 acc
-//             }),
-//             FinalLine::Group { group, .. } => {
-//                 let group = group.to_string();
-//                 let docs = format!("it takes all {}'s attributes", group);
-//                 quote! {#[doc = #docs]}
-//             }
-//         };
-//         acc.extend(quote!(
-//             #[doc = #name_docs]
-//             #[doc = "## possible values"]
-//             #props_docs
-//             pub fn #snake(self) -> Styling<#pascal> {
-//                 self.transform()
-//             }
-//         ));
-//         acc
-//     });
-//     quote! {
-//         impl Styling<Home> {
-//             #result
-//         }
-//     }
 // }
 
 // fn define_varients_types(lines: &[FinalLine]) -> TokenStream {
@@ -272,3 +230,77 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
 
     }
 }
+
+fn transformers(lines: &[FinalLine]) -> TokenStream {
+    let result = lines.iter().fold(TokenStream::new(), |mut acc, line| {
+        let docs_varients = match line {
+            FinalLine::Straight(line) => {
+                line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+                    let result = format!("- {}", x.atoms.snake());
+                    acc.extend(quote! {#[doc = #result]});
+                    acc
+                })
+            }
+            FinalLine::Group { group, .. } => {
+                let group = group.to_string();
+                let docs = format!("takes same attributes as {group}");
+                quote! {#[doc = #docs]}
+            }
+        };
+        let headers = match line {
+            FinalLine::Straight(x) => &x.header,
+            FinalLine::Group { header, .. } => header,
+        };
+        for header in headers {
+            let name_docs = header
+                .docs
+                .as_ref()
+                .map(|x| format!("# {x}"))
+                .unwrap_or(String::from("# no description found"));
+            let pascal = header.atoms.pascal_ident();
+            let snake = header.atoms.snake_ident();
+            acc.extend(quote!(
+                #[doc = #name_docs]
+                #[doc = "## possible values"]
+                #docs_varients
+                pub fn #snake(self) -> Styling<#pascal> {
+                    self.transform()
+                }
+            ));
+        }
+        acc
+    });
+    quote! {
+        impl Styling<Home> {
+            #result
+        }
+    }
+}
+// let name_docs = headers
+//     .docs
+//     .as_ref()
+//     .map(|x| format!("# {x}"))
+//     .unwrap_or(String::from("# no description found"));
+// let pascal = headers.atoms.pascal_ident();
+// let snake = headers.atoms.snake_ident();
+// let props_docs = match x {
+//     FinalLine::Straight(x) => x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+//         let result = format!("- {}", x.atoms.snake());
+//         acc.extend(quote! {#[doc = #result]});
+//         acc
+//     }),
+//     FinalLine::Group { group, .. } => {
+//         let group = group.to_string();
+//         let docs = format!("it takes all {}'s attributes", group);
+//         quote! {#[doc = #docs]}
+//     }
+// };
+// acc.extend(quote!(
+//     #[doc = #name_docs]
+//     #[doc = "## possible values"]
+//     #props_docs
+//     pub fn #snake(self) -> Styling<#pascal> {
+//         self.transform()
+//     }
+// ));
+// acc
