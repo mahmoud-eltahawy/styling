@@ -5,17 +5,23 @@ use crate::{
 };
 
 simple_attr::define_attributes!(
-accent-color is color;
-background-color is color;
-font-size is length;
-top is length;
-bottom is length;
-left is length;
-right is length;
-margin is length;
-height is length;
-width is length;
-padding is length;
+accent-color,background-color are color;
+font-size,top,bottom,left,right,margin,height,width,padding are length;
+
+border-style "sets the style of an element's four borders.",
+border-block-start-style "sets the style of an element's border at the start in the block direction.",
+border-block-end-style "sets the style of an element's border at the end in the block direction.",
+border-top-style "sets the style of an element's top border.",
+border-bottom-style "sets the style of an element's bottom border.",
+border-left-style "sets the style of an element's left border.",
+border-right-style "sets the style of an element's right border.",
+border-inline-style "sets the style of an element's border at the end in the inline direction.",
+border-inline-start-style "sets the style of an element's border at the start in the inline direction.",
+border-inline-end-style "sets the style of an element's border at the end in the inline direction.",
+outline-style "the style of an outline.",
+column-rule-style "specifies the style of the rule between columns."
+:none|hidden|dotted|dashed|solid|double|groove|ridge|inset|outset|initial|inherit;
+
 align-content "how flex lines are distributed along the cross axis in a flexbox container."
 :stretch|center|flex-start|flex-end|space-between|space-around|space-evenly|initial|inherit;
 
@@ -46,44 +52,12 @@ background-attachment "sets whether a background image scrolls with the rest of 
 background-blend-mode "defines the blending mode of each background layer (color and/or image)."
 :normal|multiply|screen|overlay|darken|lighten|color-dodge|saturation|color|luminosity;
 
-background-clip "defines how far the background (color or image) should extend within an element."
-:padding-box|border-box|content-box|initial|inherit;
-
+background-clip "defines how far the background (color or image) should extend within an element.",
 background-origin "specifies the origin position (the background positioning area) of a background image."
-=background-clip;
+:padding-box|border-box|content-box|initial|inherit;
 
 background-repeat "sets if/how a background image will be repeated."
 :repeat-x|repeat-y|no-repeat|space|round|initial|inherit;
-
-border-style "sets the style of an element's four borders."
-:none|hidden|dotted|dashed|solid|double|groove|ridge|inset|outset|initial|inherit;
-
-border-block-start-style "sets the style of an element's border at the start in the block direction."
-=border-style;
-
-border-block-end-style "sets the style of an element's border at the end in the block direction."
-=border-style;
-
-border-top-style "sets the style of an element's top border."
-=border-style;
-
-border-bottom-style "sets the style of an element's bottom border."
-=border-style;
-
-border-left-style "sets the style of an element's left border."
-=border-style;
-
-border-right-style "sets the style of an element's right border."
-=border-style;
-
-border-inline-style "sets the style of an element's border at the end in the inline direction."
-=border-style;
-
-border-inline-start-style "sets the style of an element's border at the start in the inline direction."
-=border-style;
-
-border-inline-end-style "sets the style of an element's border at the end in the inline direction."
-=border-style;
 
 border-collapse "sets whether table borders should collapse into a single border or be separated as in standard HTML."
 :separate|collapse|initial|inherit;
@@ -94,14 +68,10 @@ box-decoration-break "how the background, padding, border, border-image, box-sha
 box-sizing "how the width and height of an element are calculated: should they include padding and borders, or not."
 :content-box|border-box|initial|inherit;
 
-break-after "whether or not a page break, column break, or region break should occur after the specified element."
-:auto|all|always|avoid|avoid-column|avoid-page|avoid-region|column|left|page|recto|region|right|verso|initial|inherit;
-
-break-before "whether or not a page break, column break, or region break should occur before the specified element."
-=break-after;
-
+break-after "whether or not a page break, column break, or region break should occur after the specified element.",
+break-before "whether or not a page break, column break, or region break should occur before the specified element.",
 break-inside "whether or not a page break, column break, or region break should occur inside the specified element."
-=break-after;
+:auto|all|always|avoid|avoid-column|avoid-page|avoid-region|column|left|page|recto|region|right|verso|initial|inherit;
 
 caption-side "the placement of a table caption."
 :top|bottom|initial|inherit;
@@ -115,8 +85,6 @@ color-scheme "indicates which operating system color scheme an element should re
 column-fill "specifies how to fill columns, balanced or not."
 :balance|auto|initial|inherit;
 
-column-rule-style "specifies the style of the rule between columns."
-=border-style;
 
 column-span "how many columns an element should span across."
 :none|all|initial|inherit;
@@ -208,8 +176,6 @@ object-fit "how an <img> or <video> should be resized to fit its container."
 object-position "used together with object-fit to specify how an <img> or <video> should be positioned with x/y coordinates inside its 'own content box'."
 :position|initial|inherit;
 
-outline-style "the style of an outline."
-=border-style;
 
 overflow "what should happen if content overflows an element's box."
 :visible|hidden|clip|scroll|auto|initial|inherit;
@@ -220,26 +186,16 @@ overflow-anchor "makes it possible to turn off scroll anchoring."
 overflow-wrap "whether or not the browser can break lines with long words, if they overflow the container."
 :normal|anywhere|break-word|initial|inherit;
 
-overflow-x "whether to clip the content, add a scroll bar, or display overflow content of a block-level element, when it overflows at the left and right "
+overflow-x "whether to clip the content, add a scroll bar, or display overflow content of a block-level element, when it overflows at the left and right ",
+overflow-y "whether to clip the content, add a scroll bar, or display overflow content of a block-level element, when it overflows at the top and bottom edges."
 :visible|hidden|scroll|auto|initial|inherit;
 
-overflow-y "whether to clip the content, add a scroll bar, or display overflow content of a block-level element, when it overflows at the top and bottom edges."
-=overflow-x;
-
-overscroll-behavior "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary."
+overscroll-behavior "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary.",
+overscroll-behavior-block "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in the block direction.",
+overscroll-behavior-inline "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in the inline direction.",
+overscroll-behavior-x "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in the x-direction.",
+overscroll-behavior-y "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in y-direction.",
 :auto|contain|none|initial|inherit;
-
-overscroll-behavior-block "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in the block direction."
-=overscroll-behavior;
-
-overscroll-behavior-inline "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in the inline direction."
-=overscroll-behavior;
-
-overscroll-behavior-x "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in the x-direction."
-=overscroll-behavior;
-
-overscroll-behavior-y "turn off scroll chaining or overscroll affordance on an element when you try to scroll past the scroll boundary in y-direction."
-=overscroll-behavior;
 
 place-self "align individual grid items, and is a shorthand property for the following properties:"
 :auto|value|initial|inherit;

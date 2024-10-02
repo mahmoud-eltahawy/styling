@@ -1,10 +1,11 @@
 use parsing::parse;
 use proc_macro2::TokenStream;
-use transpile::transpile;
+// use transpile::transpile;
 
 mod parsing;
-mod transpile;
+// mod transpile;
 
 pub(crate) fn define_attributes_impl(input: TokenStream) -> TokenStream {
-    transpile(parse(input))
+    parse(input);
+    "".parse().unwrap()
 }
