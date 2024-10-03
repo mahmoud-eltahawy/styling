@@ -15,46 +15,70 @@ pub(crate) fn transpile(lines: Vec<FinalLine>) -> TokenStream {
     let transformers = transformers(&lines);
     let varients_types = define_varients_types(&lines);
     let varients_display = display_varients_types(&lines);
-    // let varients_funs = simple_varients_funs(&lines);
+    let varients_funs = simple_varients_funs(&lines);
 
     tokens.extend(quote!(
         #main_attributes_types
         #transformers
         #varients_types
         #varients_display
-        // #varients_funs
+        #varients_funs
     ));
     tokens
 }
 
-// fn simple_varients_funs(lines: &[FinalLine]) -> TokenStream {
-//     lines
-//         .iter()
-//         .flat_map(|x| match x {
-//             FinalLine::Straight(line) => Some(line),
-//             FinalLine::Group { .. } => None,
-//         })
-//         .fold(TokenStream::new(), |mut acc, x| {
-//             let pascal_header = x.header.atoms.pascal_ident();
+fn simple_varients_funs(lines: &[FinalLine]) -> TokenStream {
+    lines
+        .iter()
+        .flat_map(|x| match x {
+            FinalLine::Straight(line) => Some(line),
+            FinalLine::Group { .. } => None,
+        })
+        .fold(TokenStream::new(), |mut acc, line| {
+            match &line.header[..] {
+                [header] => {
+                    let pascal_header = header.atoms.pascal_ident();
 
-//             let funs = x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-//                 let snake = x.atoms.snake_ident();
-//                 let pascal = x.atoms.pascal_ident();
-//                 acc.extend(quote! {
-//                     pub fn #snake(self) -> Styling<Home> {
-//                         self.add_attr(Attribute::#pascal_header(#pascal_header::#pascal))
-//                     }
-//                 });
-//                 acc
-//             });
-//             acc.extend(quote! {
-//                 impl Styling<#pascal_header> {
-//                     #funs
-//                 }
-//             });
-//             acc
-//         })
-// }
+                    let funs = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+                        let snake = x.atoms.snake_ident();
+                        let pascal = x.atoms.pascal_ident();
+                        acc.extend(quote! {
+                            pub fn #snake(self) -> Styling<Home> {
+                                self.add_attr(Attribute::#pascal_header(#pascal_header::#pascal))
+                            }
+                        });
+                        acc
+                    });
+                    acc.extend(quote! {
+                        impl Styling<#pascal_header> {
+                            #funs
+                        }
+                    });
+                }
+                [first, ..] => {
+                    let header_pascal = first.atoms.pascal_ident();
+                    let attributer = format_ident!("{}Attributer", first.atoms.pascal());
+                    let funs = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+                        let snake = x.atoms.snake_ident();
+                        let attr_pascal = x.atoms.pascal_ident();
+                        acc.extend(quote! {
+                            pub fn #snake(self) -> Styling<Home> {
+                                self.add_attr(Attribute::#header_pascal(#header_pascal::#attr_pascal))
+                            }
+                        });
+                        acc
+                    });
+                    acc.extend(quote! {
+                        impl<Subject : #attributer> Styling<Subject> {
+                            #funs
+                        }
+                    });
+                }
+                [] => unreachable!(),
+            }
+            acc
+        })
+}
 
 fn main_attributes(lines: &[FinalLine]) -> TokenStream {
     let simple_ones = lines.iter().fold(TokenStream::new(), |mut acc, x| {
@@ -193,7 +217,6 @@ fn transformers(lines: &[FinalLine]) -> TokenStream {
     }
 }
 
-//TODO
 fn define_varients_types(lines: &[FinalLine]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, line| {
         let quoted = match line {
@@ -219,10 +242,30 @@ fn define_varients_types(lines: &[FinalLine]) -> TokenStream {
                     [header] => main_header(header),
                     [first, rest @ ..] => {
                         let mut tokens = main_header(first);
+                        let common_trait = format_ident!("{}Attributer", first.atoms.pascal());
+                        let snake = first.atoms.snake_ident();
+                        let first_pascal = first.atoms.pascal_ident();
+                        tokens.extend(quote! {
+                            pub trait #common_trait {
+                                fn #snake(#snake : #first_pascal) -> Attribute;
+                            }
+
+                            impl #common_trait for #first_pascal {
+                                fn #snake(#snake: #first_pascal) -> Attribute {
+                                    Attribute::#first_pascal(#snake)
+                                }
+                            }
+                        });
                         for header in rest {
                             let pascal = header.atoms.pascal_ident();
                             tokens.extend(quote! {
                                 pub struct #pascal;
+
+                                impl #common_trait for #pascal {
+                                    fn #snake(#snake: #first_pascal) -> Attribute {
+                                        Attribute::#pascal(#snake)
+                                    }
+                                }
                             });
                         }
                         tokens
@@ -295,32 +338,3 @@ fn clear_trailing_dash(input: String) -> String {
     };
     input
 }
-
-// let name_docs = headers
-//     .docs
-//     .as_ref()
-//     .map(|x| format!("# {x}"))
-//     .unwrap_or(String::from("# no description found"));
-// let pascal = headers.atoms.pascal_ident();
-// let snake = headers.atoms.snake_ident();
-// let props_docs = match x {
-//     FinalLine::Straight(x) => x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-//         let result = format!("- {}", x.atoms.snake());
-//         acc.extend(quote! {#[doc = #result]});
-//         acc
-//     }),
-//     FinalLine::Group { group, .. } => {
-//         let group = group.to_string();
-//         let docs = format!("it takes all {}'s attributes", group);
-//         quote! {#[doc = #docs]}
-//     }
-// };
-// acc.extend(quote!(
-//     #[doc = #name_docs]
-//     #[doc = "## possible values"]
-//     #props_docs
-//     pub fn #snake(self) -> Styling<#pascal> {
-//         self.transform()
-//     }
-// ));
-// acc
