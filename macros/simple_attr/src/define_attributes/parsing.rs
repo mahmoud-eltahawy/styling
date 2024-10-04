@@ -5,8 +5,8 @@ use proc_macro_error2::abort;
 
 use crate::NameCases;
 
-pub fn parse(input: TokenStream) -> Vec<FinalLine> {
-    Block::parse(input).straight()
+pub fn parse(input: TokenStream) -> Vec<Line> {
+    Block::parse(input).lines()
 }
 
 #[derive(Debug)]
@@ -33,7 +33,7 @@ impl Block {
                 LhsStage::FirstNaming => {
                     self.lines.push({
                         Line {
-                            header: vec![Name {
+                            headers: vec![Name {
                                 docs: None,
                                 atoms: vec![ident],
                             }],
@@ -43,7 +43,9 @@ impl Block {
                     self.stage = Stage::Lhs(LhsStage::Naming);
                 }
                 LhsStage::FreshNaming => match self.lines.last_mut() {
-                    Some(Line { header, .. }) => {
+                    Some(Line {
+                        headers: header, ..
+                    }) => {
                         header.push(Name::with(ident));
                         self.stage = Stage::Lhs(LhsStage::Naming);
                     }
@@ -54,17 +56,19 @@ impl Block {
                         )
                     }
                 },
-                LhsStage::Naming => match self.lines.last_mut().and_then(|x| x.header.last_mut()) {
-                    Some(name) => {
-                        name.add(ident);
+                LhsStage::Naming => {
+                    match self.lines.last_mut().and_then(|x| x.headers.last_mut()) {
+                        Some(name) => {
+                            name.add(ident);
+                        }
+                        None => {
+                            abort!(
+                                ident,
+                                "did not expect to be the first line due to header naming state"
+                            )
+                        }
                     }
-                    None => {
-                        abort!(
-                            ident,
-                            "did not expect to be the first line due to header naming state"
-                        )
-                    }
-                },
+                }
             },
             Stage::Rhs(rhs) => match rhs {
                 RhsStage::FirstNaming => match self.lines.last_mut() {
@@ -161,8 +165,8 @@ impl Block {
             abort!(literal, "can not add docs at beginning");
         };
         let name = match &self.stage {
-            Stage::Lhs(LhsStage::Naming) => line.header.last_mut().unwrap(),
-            Stage::Rhs(RhsStage::Naming) => match line.header.last_mut() {
+            Stage::Lhs(LhsStage::Naming) => line.headers.last_mut().unwrap(),
+            Stage::Rhs(RhsStage::Naming) => match line.headers.last_mut() {
                 Some(name) => name,
                 None => abort!(literal, "did not expect to be first atom in the name"),
             },
@@ -194,25 +198,10 @@ impl Block {
         })
     }
 
-    fn straight(self) -> Vec<FinalLine> {
+    fn lines(self) -> Vec<Line> {
         let Block { stage: _, lines } = self;
         lines
-            .into_iter()
-            .map(|line| {
-                let header = line.header.clone();
-                match line.attrs {
-                    Attrs::List(attrs) => FinalLine::Straight { header, attrs },
-                    Attrs::Group(group) => FinalLine::Group { header, group },
-                }
-            })
-            .collect()
     }
-}
-
-#[derive(Debug)]
-pub enum FinalLine {
-    Straight { header: Vec<Name>, attrs: Vec<Name> },
-    Group { header: Vec<Name>, group: AttrGroup },
 }
 
 #[derive(Debug)]
@@ -237,7 +226,7 @@ enum RhsStage {
 }
 
 #[derive(Debug, Clone)]
-enum Attrs {
+pub enum Attrs {
     List(Vec<Name>),
     Group(AttrGroup),
 }
@@ -259,9 +248,9 @@ impl Display for AttrGroup {
 }
 
 #[derive(Debug, Clone)]
-struct Line {
-    header: Vec<Name>,
-    attrs: Attrs,
+pub struct Line {
+    pub headers: Vec<Name>,
+    pub attrs: Attrs,
 }
 
 #[derive(Debug, Clone)]
