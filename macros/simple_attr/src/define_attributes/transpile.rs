@@ -35,46 +35,24 @@ fn simple_varients_funs(lines: &[FinalLine]) -> TokenStream {
             FinalLine::Group { .. } => None,
         })
         .fold(TokenStream::new(), |mut acc, line| {
-            match &line.header[..] {
-                [header] => {
-                    let pascal_header = header.atoms.pascal_ident();
+            for header in &line.header {
+                let pascal_header = header.atoms.pascal_ident();
 
-                    let funs = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-                        let snake = x.atoms.snake_ident();
-                        let pascal = x.atoms.pascal_ident();
-                        acc.extend(quote! {
-                            pub fn #snake(self) -> Styling<Home> {
-                                self.add_attr(Attribute::#pascal_header(#pascal_header::#pascal))
-                            }
-                        });
-                        acc
-                    });
+                let funs = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+                    let snake = x.atoms.snake_ident();
+                    let pascal = x.atoms.pascal_ident();
                     acc.extend(quote! {
-                        impl Styling<#pascal_header> {
-                            #funs
+                        pub fn #snake(self) -> Styling<Home> {
+                            self.add_attr(Attribute::#pascal_header(#pascal_header::#pascal))
                         }
                     });
-                }
-                [first, ..] => {
-                    let header_pascal = first.atoms.pascal_ident();
-                    let attributer = format_ident!("{}Attributer", first.atoms.pascal());
-                    let funs = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-                        let snake = x.atoms.snake_ident();
-                        let attr_pascal = x.atoms.pascal_ident();
-                        acc.extend(quote! {
-                            pub fn #snake(self) -> Styling<Home> {
-                                self.add_attr(Attribute::#header_pascal(#header_pascal::#attr_pascal))
-                            }
-                        });
-                        acc
-                    });
-                    acc.extend(quote! {
-                        impl<Subject : #attributer> Styling<Subject> {
-                            #funs
-                        }
-                    });
-                }
-                [] => unreachable!(),
+                    acc
+                });
+                acc.extend(quote! {
+                    impl Styling<#pascal_header> {
+                        #funs
+                    }
+                });
             }
             acc
         })
@@ -83,22 +61,12 @@ fn simple_varients_funs(lines: &[FinalLine]) -> TokenStream {
 fn main_attributes(lines: &[FinalLine]) -> TokenStream {
     let simple_ones = lines.iter().fold(TokenStream::new(), |mut acc, x| {
         match x {
-            FinalLine::Straight(StraightLine { header, .. }) => match &header[..] {
-                [alone] => {
-                    let alone = alone.atoms.pascal_ident();
-                    acc.extend(quote! {#alone(#alone),});
+            FinalLine::Straight(StraightLine { header, .. }) => {
+                for header in header {
+                    let header = header.atoms.pascal_ident();
+                    acc.extend(quote! {#header(#header),});
                 }
-                [first, rest @ ..] => {
-                    let first = first.atoms.pascal_ident();
-                    acc.extend(quote! {#first(#first),});
-
-                    for other in rest {
-                        let other = other.atoms.pascal_ident();
-                        acc.extend(quote! {#other(#first),});
-                    }
-                }
-                _ => (),
-            },
+            }
             FinalLine::Group { header, group } => {
                 for header in header {
                     let outer = header.atoms.pascal_ident();
@@ -114,11 +82,10 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
     });
     let eq_attrs = lines
         .iter()
-        .map(|x| match x {
+        .flat_map(|x| match x {
             FinalLine::Straight(x) => &x.header,
             FinalLine::Group { header, .. } => header,
         })
-        .flatten()
         .enumerate()
         .fold(TokenStream::new(), |mut acc, (index, name)| {
             let name_pascal = name.atoms.pascal_ident();
@@ -128,11 +95,10 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
         });
     let attrs_display = lines
         .iter()
-        .map(|x| match x {
+        .flat_map(|x| match x {
             FinalLine::Straight(x) => &x.header,
             FinalLine::Group { header, .. } => header,
         })
-        .flatten()
         .fold(TokenStream::new(), |mut acc, x| {
             let pascal = x.atoms.pascal_ident();
             let kebab = x.kebab();
@@ -238,61 +204,29 @@ fn define_varients_types(lines: &[FinalLine]) -> TokenStream {
                         }
                     )
                 };
-                match &header[..] {
-                    [header] => main_header(header),
-                    [first, rest @ ..] => {
-                        let mut tokens = main_header(first);
-                        let common_trait = format_ident!("{}Attributer", first.atoms.pascal());
-                        let snake = first.atoms.snake_ident();
-                        let first_pascal = first.atoms.pascal_ident();
-                        tokens.extend(quote! {
-                            pub trait #common_trait {
-                                fn #snake(#snake : #first_pascal) -> Attribute;
-                            }
-
-                            impl #common_trait for #first_pascal {
-                                fn #snake(#snake: #first_pascal) -> Attribute {
-                                    Attribute::#first_pascal(#snake)
-                                }
-                            }
-                        });
-                        for header in rest {
-                            let pascal = header.atoms.pascal_ident();
-                            tokens.extend(quote! {
-                                pub struct #pascal;
-
-                                impl #common_trait for #pascal {
-                                    fn #snake(#snake: #first_pascal) -> Attribute {
-                                        Attribute::#pascal(#snake)
-                                    }
-                                }
-                            });
-                        }
-                        tokens
-                    }
-                    [] => unreachable!(),
-                }
+                header.iter().fold(TokenStream::new(), |mut acc, header| {
+                    acc.extend(main_header(header));
+                    acc
+                })
             }
             FinalLine::Group { header, group } => {
-                header
-                    .into_iter()
-                    .fold(TokenStream::new(), |mut acc, header| {
-                        let header_pascal = header.atoms.pascal_ident();
-                        let group_pascal_attributer = format_ident!("{group}Attributer");
-                        let group_snake = format_ident!("{}", group.to_string().to_lowercase());
-                        let group_pascal = format_ident!("{}", group.to_string());
-                        acc.extend(quote! {
-                            pub struct #header_pascal;
+                header.iter().fold(TokenStream::new(), |mut acc, header| {
+                    let header_pascal = header.atoms.pascal_ident();
+                    let group_pascal_attributer = format_ident!("{group}Attributer");
+                    let group_snake = format_ident!("{}", group.to_string().to_lowercase());
+                    let group_pascal = format_ident!("{}", group.to_string());
+                    acc.extend(quote! {
+                        pub struct #header_pascal;
 
-                            impl #group_pascal_attributer for #header_pascal {
-                                fn #group_snake(#group_snake: #group_pascal) -> Attribute {
-                                    Attribute::#header_pascal(#group_snake)
-                                }
+                        impl #group_pascal_attributer for #header_pascal {
+                            fn #group_snake(#group_snake: #group_pascal) -> Attribute {
+                                Attribute::#header_pascal(#group_snake)
                             }
+                        }
 
-                        });
-                        acc
-                    })
+                    });
+                    acc
+                })
             }
         };
         acc.extend(quoted);
@@ -304,8 +238,12 @@ fn display_varients_types(lines: &[FinalLine]) -> TokenStream {
     lines
         .iter()
         .flat_map(|x| match x {
-            FinalLine::Straight(line) => line.header.first().map(|header| (header, &line.attrs)),
-            FinalLine::Group { .. } => None,
+            FinalLine::Straight(line) => line
+                .header
+                .iter()
+                .map(|header| (header, &line.attrs))
+                .collect(),
+            FinalLine::Group { .. } => vec![],
         })
         .fold(TokenStream::new(), |mut acc, (header, attrs)| {
             let header_pascal = header.atoms.pascal_ident();
