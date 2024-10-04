@@ -201,7 +201,7 @@ impl Block {
             .map(|line| {
                 let header = line.header.clone();
                 match line.attrs {
-                    Attrs::List(attrs) => FinalLine::Straight(StraightLine { header, attrs }),
+                    Attrs::List(attrs) => FinalLine::Straight { header, attrs },
                     Attrs::Group(group) => FinalLine::Group { header, group },
                 }
             })
@@ -211,7 +211,7 @@ impl Block {
 
 #[derive(Debug)]
 pub enum FinalLine {
-    Straight(StraightLine),
+    Straight { header: Vec<Name>, attrs: Vec<Name> },
     Group { header: Vec<Name>, group: AttrGroup },
 }
 
@@ -262,24 +262,6 @@ impl Display for AttrGroup {
 struct Line {
     header: Vec<Name>,
     attrs: Attrs,
-}
-
-#[derive(Debug)]
-pub struct StraightLine {
-    pub header: Vec<Name>,
-    pub attrs: Vec<Name>,
-}
-
-impl Line {
-    fn with(ident: Ident) -> Self {
-        Line {
-            header: vec![Name {
-                docs: None,
-                atoms: vec![ident],
-            }],
-            attrs: Attrs::List(Vec::new()),
-        }
-    }
 }
 
 #[derive(Debug, Clone)]

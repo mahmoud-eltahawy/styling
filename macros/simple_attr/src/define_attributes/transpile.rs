@@ -1,10 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::{
-    define_attributes::parsing::{AttrGroup, StraightLine},
-    NameCases,
-};
+use crate::{define_attributes::parsing::AttrGroup, NameCases};
 
 use super::parsing::{FinalLine, Name};
 
@@ -31,14 +28,14 @@ fn simple_varients_funs(lines: &[FinalLine]) -> TokenStream {
     lines
         .iter()
         .flat_map(|x| match x {
-            FinalLine::Straight(line) => Some(line),
+            FinalLine::Straight { header, attrs } => Some((header, attrs)),
             FinalLine::Group { .. } => None,
         })
-        .fold(TokenStream::new(), |mut acc, line| {
-            for header in &line.header {
+        .fold(TokenStream::new(), |mut acc, (header, attrs)| {
+            for header in header {
                 let pascal_header = header.atoms.pascal_ident();
 
-                let funs = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+                let funs = attrs.iter().fold(TokenStream::new(), |mut acc, x| {
                     let snake = x.atoms.snake_ident();
                     let pascal = x.atoms.pascal_ident();
                     acc.extend(quote! {
@@ -61,7 +58,7 @@ fn simple_varients_funs(lines: &[FinalLine]) -> TokenStream {
 fn main_attributes(lines: &[FinalLine]) -> TokenStream {
     let simple_ones = lines.iter().fold(TokenStream::new(), |mut acc, x| {
         match x {
-            FinalLine::Straight(StraightLine { header, .. }) => {
+            FinalLine::Straight { header, .. } => {
                 for header in header {
                     let header = header.atoms.pascal_ident();
                     acc.extend(quote! {#header(#header),});
@@ -83,7 +80,7 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
     let eq_attrs = lines
         .iter()
         .flat_map(|x| match x {
-            FinalLine::Straight(x) => &x.header,
+            FinalLine::Straight { header, .. } => header,
             FinalLine::Group { header, .. } => header,
         })
         .enumerate()
@@ -96,7 +93,7 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
     let attrs_display = lines
         .iter()
         .flat_map(|x| match x {
-            FinalLine::Straight(x) => &x.header,
+            FinalLine::Straight { header, .. } => header,
             FinalLine::Group { header, .. } => header,
         })
         .fold(TokenStream::new(), |mut acc, x| {
@@ -140,8 +137,8 @@ fn main_attributes(lines: &[FinalLine]) -> TokenStream {
 fn transformers(lines: &[FinalLine]) -> TokenStream {
     let result = lines.iter().fold(TokenStream::new(), |mut acc, line| {
         let docs_varients = match line {
-            FinalLine::Straight(line) => {
-                line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+            FinalLine::Straight { attrs, .. } => {
+                attrs.iter().fold(TokenStream::new(), |mut acc, x| {
                     let result = format!("- {}", x.atoms.snake());
                     acc.extend(quote! {#[doc = #result]});
                     acc
@@ -154,7 +151,7 @@ fn transformers(lines: &[FinalLine]) -> TokenStream {
             }
         };
         let headers = match line {
-            FinalLine::Straight(x) => &x.header,
+            FinalLine::Straight { header, .. } => header,
             FinalLine::Group { header, .. } => header,
         };
         for header in headers {
@@ -186,7 +183,7 @@ fn transformers(lines: &[FinalLine]) -> TokenStream {
 fn define_varients_types(lines: &[FinalLine]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, line| {
         let quoted = match line {
-            FinalLine::Straight(StraightLine { header, attrs }) => {
+            FinalLine::Straight { header, attrs } => {
                 let main_header = |header: &Name| {
                     let header_pascal = header.atoms.pascal_ident();
                     let varients_pascal =
@@ -238,11 +235,9 @@ fn display_varients_types(lines: &[FinalLine]) -> TokenStream {
     lines
         .iter()
         .flat_map(|x| match x {
-            FinalLine::Straight(line) => line
-                .header
-                .iter()
-                .map(|header| (header, &line.attrs))
-                .collect(),
+            FinalLine::Straight { header, attrs } => {
+                header.iter().map(|header| (header, attrs)).collect()
+            }
             FinalLine::Group { .. } => vec![],
         })
         .fold(TokenStream::new(), |mut acc, (header, attrs)| {
