@@ -5,7 +5,18 @@ use crate::{
 };
 
 simple_attr::define_attributes!(
-accent-color,background-color,border-color,color are color;
+accent-color r#"the accent color for user-interface controls like: <input type="checkbox">, <input type="radio">, <input type="range"> and <progress>."#,
+background-color "the background color of an element.",
+border-color "the color of an element's four borders. This property can have from one to four values.",
+border-block-color "color of an element's borders in the block direction.",
+border-left-color "the color of an element's left border.",
+border-right-color "the color of an element's right border.",
+border-top-color "the color of an element's top border.",
+border-bottom-color "the color of an element's bottom border.",
+caret-color "color of the cursor in input elements:",
+outline-color "specifies the color of an outline.",
+color "specifies the color of text."
+are color;
 font-size,top,bottom,left,right,margin,height,width,padding are length;
 
 border-style "sets the style of an element's four borders.",
