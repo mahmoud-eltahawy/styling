@@ -43,7 +43,7 @@ fn simple_varients_funs(lines: &[Line]) -> TokenStream {
                     let pascal = x.atoms.pascal_ident();
                     acc.extend(quote! {
                         pub fn #snake(self) -> Styling<Home> {
-                            self.add_attr(Attribute::#pascal_header(#pascal_header::#pascal))
+                            self.add_attr(Attribute::#pascal_header(AttrValue::Custom(#pascal_header::#pascal)))
                         }
                     });
                     acc
@@ -64,7 +64,7 @@ fn main_attributes(lines: &[Line]) -> TokenStream {
             Attrs::List(_) => {
                 for header in &x.headers {
                     let header = header.atoms.pascal_ident();
-                    acc.extend(quote! {#header(#header),});
+                    acc.extend(quote! {#header(AttrValue<#header>),});
                 }
             }
             Attrs::Group(group) => {
@@ -74,7 +74,7 @@ fn main_attributes(lines: &[Line]) -> TokenStream {
                         AttrGroup::Color => format_ident!("Color"),
                         AttrGroup::Length => format_ident!("Length"),
                     };
-                    acc.extend(quote! {#outer(#inner),});
+                    acc.extend(quote! {#outer(AttrValue<#inner>),});
                 }
             }
         }
@@ -100,6 +100,25 @@ fn main_attributes(lines: &[Line]) -> TokenStream {
                 acc
             });
     quote! {
+        #[derive(Debug, Clone)]
+        pub enum AttrValue<T> {
+            Initial,
+            Inherit,
+            Custom(T),
+        }
+
+        impl<T : std::fmt::Display> std::fmt::Display for AttrValue<T> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                use AttrValue::*;
+                let result = match self {
+                    Initial => "initial".to_string(),
+                    Inherit => "inherit".to_string(),
+                    Custom(x) => x.to_string(),
+                };
+                write!(f, "{}", result)
+            }
+        }
+
         #[derive(Debug, Clone)]
         pub enum Attribute {
             #simple_ones
@@ -212,7 +231,7 @@ fn define_varients_types(lines: &[Line]) -> TokenStream {
 
                             impl #group_pascal_attributer for #header_pascal {
                                 fn #group_snake(#group_snake: #group_pascal) -> Attribute {
-                                    Attribute::#header_pascal(#group_snake)
+                                    Attribute::#header_pascal(AttrValue::Custom(#group_snake))
                                 }
                             }
 
