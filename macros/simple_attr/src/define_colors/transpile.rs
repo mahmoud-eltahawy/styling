@@ -48,7 +48,7 @@ fn fixed_funs() -> TokenStream {
             let [a, b, c, d, e, f] = hex.chars().collect::<Vec<_>>()[..] else {
                 unreachable!();
             };
-            self.add_attr(Attribute::AccentColor(AttrValue::Custom(Color::Hex([a, b, c, d, e, f]))))
+            self.add_attr(Subject::color(Color::Hex([a, b, c, d, e, f])))
         }
 
         pub fn t_hex(self, hex: &str) -> Styling<Home> {
@@ -56,19 +56,19 @@ fn fixed_funs() -> TokenStream {
             let [a, b, c, d, e, f, g ,h] = hex.chars().collect::<Vec<_>>()[..] else {
                 unreachable!();
             };
-            self.add_attr(Attribute::AccentColor(AttrValue::Custom(Color::THex([a, b, c, d, e, f, g ,h]))))
+            self.add_attr(Subject::color(Color::THex([a, b, c, d, e, f, g ,h])))
         }
 
         pub fn rgb(self, red: f32, green: f32, blue: f32) -> Styling<Home> {
-            self.add_attr(Attribute::AccentColor(AttrValue::Custom(Color::Rgb(red, green, blue))))
+            self.add_attr(Subject::color(Color::Rgb(red, green, blue)))
         }
 
         pub fn rgba(self, red: f32, green: f32, blue: f32, opacity: f32) -> Styling<Home> {
-            self.add_attr(Attribute::AccentColor(AttrValue::Custom(Color::Rgba(red, green, blue, opacity))))
+            self.add_attr(Subject::color(Color::Rgba(red, green, blue, opacity)))
         }
 
         pub fn hsl(self, hue: f32, saturation: f32, lightness: f32) -> Styling<Home> {
-            self.add_attr(Attribute::AccentColor(AttrValue::Custom(Color::Hsl(hue, saturation, lightness))))
+            self.add_attr(Subject::color(Color::Hsl(hue, saturation, lightness)))
         }
 
         pub fn hsla(
@@ -78,7 +78,7 @@ fn fixed_funs() -> TokenStream {
             lightness: f32,
             opacity: f32,
         ) -> Styling<Home> {
-            self.add_attr(Attribute::AccentColor(AttrValue::Custom(Color::Hsla(hue, saturation, lightness, opacity))))
+            self.add_attr(Subject::color(Color::Hsla(hue, saturation, lightness, opacity)))
         }
     };
     fixed_funs
@@ -129,7 +129,7 @@ fn funs(names: Vec<parsing::Name>) -> TokenStream {
         let pascal = x.0.pascal_ident();
         acc.extend(quote! {
              pub fn #snake(self) -> Styling<Home> {
-                 self.add_attr(Attribute::AccentColor(AttrValue::Custom(Color::#pascal)))
+                 self.add_attr(Subject::color(Color::#pascal))
              }
         });
         acc

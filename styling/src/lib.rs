@@ -152,4 +152,20 @@ mod tests {
             &result
         );
     }
+
+    #[test]
+    fn test_colors() {
+        let result = styling()
+            .border_color()
+            .red()
+            .background_color()
+            .hex("ff0000")
+            .accent_color()
+            .rgb(255., 0., 0.)
+            .to_string();
+        assert_eq!(
+            "border-color:Red;background-color:#ff0000;accent-color:rgb(255,0,0);",
+            &result
+        );
+    }
 }
