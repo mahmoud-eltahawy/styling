@@ -71,8 +71,8 @@ fn main_attributes(lines: &[Line]) -> TokenStream {
                 for header in &x.headers {
                     let outer = header.atoms.pascal_ident();
                     let inner = match group {
-                        AttrGroup::Color => format_ident!("Color"),
-                        AttrGroup::Length => format_ident!("Length"),
+                        AttrGroup::Color => format_ident!("ColorAttribute"),
+                        AttrGroup::Length => format_ident!("LengthAttribute"),
                     };
                     acc.extend(quote! {#outer(AttrValue<#inner>),});
                 }
@@ -223,14 +223,14 @@ fn define_varients_types(lines: &[Line]) -> TokenStream {
                     .iter()
                     .fold(TokenStream::new(), |mut acc, header| {
                         let header_pascal = header.atoms.pascal_ident();
-                        let group_pascal_attributer = format_ident!("{group}Attributer"); //TODO
+                        let group_pascal_attributer = format_ident!("{group}r"); //TODO
                         let group_snake = format_ident!("{}", group.to_string().to_lowercase());
                         let group_pascal = format_ident!("{}", group.to_string());
                         acc.extend(quote! {
                             pub struct #header_pascal;
 
                             impl #group_pascal_attributer for #header_pascal {
-                                fn #group_snake(#group_snake: #group_pascal) -> Attribute {
+                                fn attribute(#group_snake: #group_pascal) -> Attribute {
                                     Attribute::#header_pascal(AttrValue::Custom(#group_snake))
                                 }
                             }

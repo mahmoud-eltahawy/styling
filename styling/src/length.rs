@@ -2,7 +2,7 @@ use crate::{Attribute, Home, Styling};
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy)]
-pub enum Length {
+pub enum LengthAttribute {
     //absolute
     Cm(f32),
     Mm(f32),
@@ -23,80 +23,80 @@ pub enum Length {
     Percent(f32),
 }
 
-impl Display for Length {
+impl Display for LengthAttribute {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Length::Cm(num) => write!(f, "{num}cm"),
-            Length::Mm(num) => write!(f, "{num}mm"),
-            Length::In(num) => write!(f, "{num}in"),
-            Length::Px(num) => write!(f, "{num}px"),
-            Length::Abs(num) => write!(f, "{num}"),
-            Length::Pt(num) => write!(f, "{num}pt"),
-            Length::Pc(num) => write!(f, "{num}pc"),
-            Length::Em(num) => write!(f, "{num}em"),
-            Length::Ex(num) => write!(f, "{num}ex"),
-            Length::Ch(num) => write!(f, "{num}ch"),
-            Length::Rem(num) => write!(f, "{num}rem"),
-            Length::Vw(num) => write!(f, "{num}vw"),
-            Length::Vh(num) => write!(f, "{num}vh"),
-            Length::Vmin(num) => write!(f, "{num}vmin"),
-            Length::Vmax(num) => write!(f, "{num}vmax"),
-            Length::Percent(num) => write!(f, "{num}%"),
+            LengthAttribute::Cm(num) => write!(f, "{num}cm"),
+            LengthAttribute::Mm(num) => write!(f, "{num}mm"),
+            LengthAttribute::In(num) => write!(f, "{num}in"),
+            LengthAttribute::Px(num) => write!(f, "{num}px"),
+            LengthAttribute::Abs(num) => write!(f, "{num}"),
+            LengthAttribute::Pt(num) => write!(f, "{num}pt"),
+            LengthAttribute::Pc(num) => write!(f, "{num}pc"),
+            LengthAttribute::Em(num) => write!(f, "{num}em"),
+            LengthAttribute::Ex(num) => write!(f, "{num}ex"),
+            LengthAttribute::Ch(num) => write!(f, "{num}ch"),
+            LengthAttribute::Rem(num) => write!(f, "{num}rem"),
+            LengthAttribute::Vw(num) => write!(f, "{num}vw"),
+            LengthAttribute::Vh(num) => write!(f, "{num}vh"),
+            LengthAttribute::Vmin(num) => write!(f, "{num}vmin"),
+            LengthAttribute::Vmax(num) => write!(f, "{num}vmax"),
+            LengthAttribute::Percent(num) => write!(f, "{num}%"),
         }
     }
 }
 
 pub trait LengthAttributer {
-    fn length(len: Length) -> Attribute;
+    fn attribute(len: LengthAttribute) -> Attribute;
 }
 
 impl<Subject: LengthAttributer> Styling<Subject> {
     pub fn px(self, len: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Px(len)))
+        self.add_attr(Subject::attribute(LengthAttribute::Px(len)))
     }
     pub fn abs(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Abs(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Abs(num)))
     }
     pub fn cm(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Cm(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Cm(num)))
     }
     pub fn percent(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Percent(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Percent(num)))
     }
     pub fn mm(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Mm(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Mm(num)))
     }
     pub fn inch(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::In(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::In(num)))
     }
     pub fn pt(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Pt(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Pt(num)))
     }
     pub fn pc(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Pc(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Pc(num)))
     }
     pub fn em(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Em(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Em(num)))
     }
     pub fn ex(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Ex(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Ex(num)))
     }
     pub fn ch(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Ch(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Ch(num)))
     }
     pub fn rem_(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Rem(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Rem(num)))
     }
     pub fn vw(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Vw(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Vw(num)))
     }
     pub fn vh(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Vh(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Vh(num)))
     }
     pub fn vmin(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Vmin(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Vmin(num)))
     }
     pub fn vmax(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::length(Length::Vmax(num)))
+        self.add_attr(Subject::attribute(LengthAttribute::Vmax(num)))
     }
 }

@@ -1,11 +1,11 @@
 use crate::{
-    color::{Color, ColorAttributer},
-    length::{Length, LengthAttributer},
+    color::{ColorAttribute, ColorAttributer},
+    length::{LengthAttribute, LengthAttributer},
     Home, Styling,
 };
 
 simple_attr::define_attributes!(
-accent-color,background-color,border-color are color;
+accent-color,background-color,border-color,color are color;
 font-size,top,bottom,left,right,margin,height,width,padding are length;
 
 border-style "sets the style of an element's four borders.",

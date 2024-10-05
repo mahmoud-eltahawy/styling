@@ -240,8 +240,8 @@ pub enum AttrGroup {
 impl Display for AttrGroup {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let result = match self {
-            AttrGroup::Color => "Color",
-            AttrGroup::Length => "Length",
+            AttrGroup::Color => "ColorAttribute",
+            AttrGroup::Length => "LengthAttribute",
         };
         write!(f, "{}", result)
     }

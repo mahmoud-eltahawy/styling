@@ -162,9 +162,11 @@ mod tests {
             .hex("ff0000")
             .accent_color()
             .rgb(255., 0., 0.)
+            .color()
+            .green()
             .to_string();
         assert_eq!(
-            "border-color:Red;background-color:#ff0000;accent-color:rgb(255,0,0);",
+            "border-color:Red;background-color:#ff0000;accent-color:rgb(255,0,0);color:Green;",
             &result
         );
     }
