@@ -175,19 +175,17 @@ fn define_varients_types(lines: &[Line]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, line| {
         let quoted = match &line.attrs {
             Attrs::List(attrs) => {
+                let varients_pascal = attrs.iter().fold(TokenStream::new(), |mut acc, varient| {
+                    let pascal = varient.atoms.pascal_ident();
+                    acc.extend(quote! {
+                        #pascal,
+                    });
+                    acc
+                });
                 line.headers
                     .iter()
                     .fold(TokenStream::new(), |mut acc, header| {
                         let header_pascal = header.atoms.pascal_ident();
-                        let varients_pascal =
-                            attrs.iter().fold(TokenStream::new(), |mut acc, varient| {
-                                let pascal = varient.atoms.pascal_ident();
-                                acc.extend(quote! {
-                                    #pascal,
-                                });
-                                acc
-                            });
-
                         acc.extend(quote!(
                             #[derive(Debug, Clone)]
                             pub enum #header_pascal {
