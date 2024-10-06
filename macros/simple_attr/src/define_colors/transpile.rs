@@ -75,14 +75,6 @@ fn fixed_funs() -> TokenStream {
         ) -> Styling<Home> {
             self.add_attr(Subject::attribute(AttrValue::Custom(ColorAttribute::Hsla(hue, saturation, lightness, opacity))))
         }
-
-        // pub fn initial(self) -> Styling<Home> {
-        //     self.add_attr(Subject::attribute(AttrValue::Initial))
-        // }
-
-        // pub fn inherit(self) -> Styling<Home> {
-        //     self.add_attr(Subject::attribute(AttrValue::Inherit))
-        // }
     }
 }
 
