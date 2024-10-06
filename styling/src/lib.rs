@@ -11,6 +11,16 @@ pub trait Attributer {
     fn attribute(len: AttrValue<Self::Kind>) -> Attribute;
 }
 
+impl<T, Subject: Attributer<Kind = T>> Styling<Subject> {
+    pub fn initial(self) -> Styling<Home> {
+        self.add_attr(Subject::attribute(AttrValue::Initial))
+    }
+
+    pub fn inherit(self) -> Styling<Home> {
+        self.add_attr(Subject::attribute(AttrValue::Inherit))
+    }
+}
+
 #[derive(Debug)]
 pub struct Styling<T>(Vec<Attribute>, PhantomData<T>);
 

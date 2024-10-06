@@ -127,12 +127,4 @@ impl<Subject: Attributer<Kind = LengthAttribute>> Styling<Subject> {
             LengthAttribute::Vmax(num),
         )))
     }
-
-    pub fn initial(self) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Initial))
-    }
-
-    pub fn inherit(self) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Inherit))
-    }
 }
