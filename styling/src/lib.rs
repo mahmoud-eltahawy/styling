@@ -3,8 +3,13 @@ mod length;
 mod simple_props;
 // pub mod svg;
 
-use simple_props::Attribute;
+use simple_props::{AttrValue, Attribute};
 use std::{fmt::Display, marker::PhantomData};
+
+pub trait Attributer {
+    type Kind;
+    fn attribute(len: AttrValue<Self::Kind>) -> Attribute;
+}
 
 #[derive(Debug)]
 pub struct Styling<T>(Vec<Attribute>, PhantomData<T>);

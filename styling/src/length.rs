@@ -1,4 +1,4 @@
-use crate::{simple_props::AttrValue, Attribute, Home, Styling};
+use crate::{simple_props::AttrValue, Attributer, Home, Styling};
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy)]
@@ -46,11 +46,7 @@ impl Display for LengthAttribute {
     }
 }
 
-pub trait LengthAttributer {
-    fn attribute(len: AttrValue<LengthAttribute>) -> Attribute;
-}
-
-impl<Subject: LengthAttributer> Styling<Subject> {
+impl<Subject: Attributer<Kind = LengthAttribute>> Styling<Subject> {
     pub fn px(self, len: f32) -> Styling<Home> {
         self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Px(
             len,

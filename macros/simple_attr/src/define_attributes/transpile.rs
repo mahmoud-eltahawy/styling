@@ -223,14 +223,14 @@ fn define_varients_types(lines: &[Line]) -> TokenStream {
                     .iter()
                     .fold(TokenStream::new(), |mut acc, header| {
                         let header_pascal = header.atoms.pascal_ident();
-                        let group_pascal_attributer = format_ident!("{group}r"); //TODO
                         let group_snake = format_ident!("{}", group.to_string().to_lowercase());
                         let group_pascal = format_ident!("{}", group.to_string());
                         acc.extend(quote! {
                             pub struct #header_pascal;
 
-                            impl #group_pascal_attributer for #header_pascal {
-                                fn attribute(#group_snake: AttrValue<#group_pascal>) -> Attribute {
+                            impl Attributer for #header_pascal {
+                                type Kind = #group_pascal;
+                                fn attribute(#group_snake: AttrValue<Self::Kind>) -> Attribute {
                                     Attribute::#header_pascal(#group_snake)
                                 }
                             }

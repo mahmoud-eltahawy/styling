@@ -1,5 +1,5 @@
 use crate::simple_props::AttrValue;
-use crate::{Attribute, Home, Styling};
+use crate::{Attributer, Home, Styling};
 use simple_attr::define_colors;
 
 define_colors!(

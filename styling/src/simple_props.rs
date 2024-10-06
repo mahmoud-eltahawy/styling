@@ -1,8 +1,4 @@
-use crate::{
-    color::{ColorAttribute, ColorAttributer},
-    length::{LengthAttribute, LengthAttributer},
-    Home, Styling,
-};
+use crate::{color::ColorAttribute, length::LengthAttribute, Attributer, Home, Styling};
 
 simple_attr::define_attributes!(
 accent-color r#"the accent color for user-interface controls like: <input type="checkbox">, <input type="radio">, <input type="range"> and <progress>."#,

@@ -29,12 +29,7 @@ pub(crate) fn transpile(names: Vec<parsing::Name>) -> TokenStream {
             }
         }
 
-        pub trait ColorAttributer {
-            fn attribute(color: AttrValue<ColorAttribute>) -> Attribute;
-        }
-
-
-        impl<Subject : ColorAttributer> Styling<Subject> {
+        impl<Subject : Attributer<Kind = ColorAttribute>> Styling<Subject> {
             #fixed_funs
             #funs
         }
