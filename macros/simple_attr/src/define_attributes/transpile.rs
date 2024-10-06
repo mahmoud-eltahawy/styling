@@ -6,19 +6,19 @@ use crate::{
     NameCases,
 };
 
-use super::parsing::{Line, Name};
+use super::parsing::Line;
 
 pub(crate) fn transpile(lines: Vec<Line>) -> TokenStream {
     let mut tokens = TokenStream::new();
 
-    let main_attributes_types = main_attributes(&lines);
+    let attribute = define_attribute(&lines);
     let transformers = transformers(&lines);
     let varients_types = define_varients_types(&lines);
     let varients_display = display_varients_types(&lines);
     let varients_funs = simple_varients_funs(&lines);
 
     tokens.extend(quote!(
-        #main_attributes_types
+        #attribute
         #transformers
         #varients_types
         #varients_display
@@ -58,7 +58,7 @@ fn simple_varients_funs(lines: &[Line]) -> TokenStream {
         })
 }
 
-fn main_attributes(lines: &[Line]) -> TokenStream {
+fn define_attribute(lines: &[Line]) -> TokenStream {
     let simple_ones = lines.iter().fold(TokenStream::new(), |mut acc, x| {
         match &x.attrs {
             Attrs::List(_) => {
@@ -175,27 +175,25 @@ fn define_varients_types(lines: &[Line]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, line| {
         let quoted = match &line.attrs {
             Attrs::List(attrs) => {
-                let main_header = |header: &Name| {
-                    let header_pascal = header.atoms.pascal_ident();
-                    let varients_pascal =
-                        attrs.iter().fold(TokenStream::new(), |mut acc, varient| {
-                            let pascal = varient.atoms.pascal_ident();
-                            acc.extend(quote! {
-                                #pascal,
-                            });
-                            acc
-                        });
-                    quote!(
-                        #[derive(Debug, Clone)]
-                        pub enum #header_pascal {
-                            #varients_pascal
-                        }
-                    )
-                };
                 line.headers
                     .iter()
                     .fold(TokenStream::new(), |mut acc, header| {
-                        acc.extend(main_header(header));
+                        let header_pascal = header.atoms.pascal_ident();
+                        let varients_pascal =
+                            attrs.iter().fold(TokenStream::new(), |mut acc, varient| {
+                                let pascal = varient.atoms.pascal_ident();
+                                acc.extend(quote! {
+                                    #pascal,
+                                });
+                                acc
+                            });
+
+                        acc.extend(quote!(
+                            #[derive(Debug, Clone)]
+                            pub enum #header_pascal {
+                                #varients_pascal
+                            }
+                        ));
                         acc
                     })
             }
