@@ -1,4 +1,4 @@
-use crate::{Attribute, Home, Styling};
+use crate::{simple_props::AttrValue, Attribute, Home, Styling};
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy)]
@@ -47,56 +47,96 @@ impl Display for LengthAttribute {
 }
 
 pub trait LengthAttributer {
-    fn attribute(len: LengthAttribute) -> Attribute;
+    fn attribute(len: AttrValue<LengthAttribute>) -> Attribute;
 }
 
 impl<Subject: LengthAttributer> Styling<Subject> {
     pub fn px(self, len: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Px(len)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Px(
+            len,
+        ))))
     }
     pub fn abs(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Abs(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Abs(
+            num,
+        ))))
     }
     pub fn cm(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Cm(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Cm(
+            num,
+        ))))
     }
     pub fn percent(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Percent(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(
+            LengthAttribute::Percent(num),
+        )))
     }
     pub fn mm(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Mm(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Mm(
+            num,
+        ))))
     }
     pub fn inch(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::In(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::In(
+            num,
+        ))))
     }
     pub fn pt(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Pt(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Pt(
+            num,
+        ))))
     }
     pub fn pc(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Pc(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Pc(
+            num,
+        ))))
     }
     pub fn em(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Em(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Em(
+            num,
+        ))))
     }
     pub fn ex(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Ex(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Ex(
+            num,
+        ))))
     }
     pub fn ch(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Ch(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Ch(
+            num,
+        ))))
     }
     pub fn rem_(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Rem(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Rem(
+            num,
+        ))))
     }
     pub fn vw(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Vw(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Vw(
+            num,
+        ))))
     }
     pub fn vh(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Vh(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Vh(
+            num,
+        ))))
     }
     pub fn vmin(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Vmin(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(
+            LengthAttribute::Vmin(num),
+        )))
     }
     pub fn vmax(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(LengthAttribute::Vmax(num)))
+        self.add_attr(Subject::attribute(AttrValue::Custom(
+            LengthAttribute::Vmax(num),
+        )))
+    }
+
+    pub fn initial(self) -> Styling<Home> {
+        self.add_attr(Subject::attribute(AttrValue::Initial))
+    }
+
+    pub fn inherit(self) -> Styling<Home> {
+        self.add_attr(Subject::attribute(AttrValue::Inherit))
     }
 }

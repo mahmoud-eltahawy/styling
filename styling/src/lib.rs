@@ -20,19 +20,19 @@ impl<T> Styling<T> {
     }
 
     fn add_attr(self, attr: Attribute) -> Styling<Home> {
-        let Self(mut inner, _) = self;
-        match inner
+        let Self(mut attrs, _) = self;
+        match attrs
             .iter()
             .enumerate()
             .find(|(_, x)| x.eq(&attr))
             .map(|(i, _)| i)
         {
             Some(index) => {
-                inner[index] = attr;
+                attrs[index] = attr;
             }
-            None => inner.push(attr),
+            None => attrs.push(attr),
         };
-        Styling(inner, PhantomData)
+        Styling(attrs, PhantomData)
     }
 }
 

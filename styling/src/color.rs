@@ -1,3 +1,4 @@
+use crate::simple_props::AttrValue;
 use crate::{Attribute, Home, Styling};
 use simple_attr::define_colors;
 

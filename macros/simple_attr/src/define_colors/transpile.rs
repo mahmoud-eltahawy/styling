@@ -30,7 +30,7 @@ pub(crate) fn transpile(names: Vec<parsing::Name>) -> TokenStream {
         }
 
         pub trait ColorAttributer {
-            fn attribute(color: ColorAttribute) -> Attribute;
+            fn attribute(color: AttrValue<ColorAttribute>) -> Attribute;
         }
 
 
@@ -42,13 +42,13 @@ pub(crate) fn transpile(names: Vec<parsing::Name>) -> TokenStream {
 }
 
 fn fixed_funs() -> TokenStream {
-    let fixed_funs = quote! {
+    quote! {
         pub fn hex(self, hex: &str) -> Styling<Home> {
             assert!(hex.len() == 6,"hex str is 6 chars only");
             let [a, b, c, d, e, f] = hex.chars().collect::<Vec<_>>()[..] else {
                 unreachable!();
             };
-            self.add_attr(Subject::attribute(ColorAttribute::Hex([a, b, c, d, e, f])))
+            self.add_attr(Subject::attribute(AttrValue::Custom(ColorAttribute::Hex([a, b, c, d, e, f]))))
         }
 
         pub fn t_hex(self, hex: &str) -> Styling<Home> {
@@ -56,19 +56,19 @@ fn fixed_funs() -> TokenStream {
             let [a, b, c, d, e, f, g ,h] = hex.chars().collect::<Vec<_>>()[..] else {
                 unreachable!();
             };
-            self.add_attr(Subject::attribute(ColorAttribute::THex([a, b, c, d, e, f, g ,h])))
+            self.add_attr(Subject::attribute(AttrValue::Custom(ColorAttribute::THex([a, b, c, d, e, f, g ,h]))))
         }
 
         pub fn rgb(self, red: f32, green: f32, blue: f32) -> Styling<Home> {
-            self.add_attr(Subject::attribute(ColorAttribute::Rgb(red, green, blue)))
+            self.add_attr(Subject::attribute(AttrValue::Custom(ColorAttribute::Rgb(red, green, blue))))
         }
 
         pub fn rgba(self, red: f32, green: f32, blue: f32, opacity: f32) -> Styling<Home> {
-            self.add_attr(Subject::attribute(ColorAttribute::Rgba(red, green, blue, opacity)))
+            self.add_attr(Subject::attribute(AttrValue::Custom(ColorAttribute::Rgba(red, green, blue, opacity))))
         }
 
         pub fn hsl(self, hue: f32, saturation: f32, lightness: f32) -> Styling<Home> {
-            self.add_attr(Subject::attribute(ColorAttribute::Hsl(hue, saturation, lightness)))
+            self.add_attr(Subject::attribute(AttrValue::Custom(ColorAttribute::Hsl(hue, saturation, lightness))))
         }
 
         pub fn hsla(
@@ -78,10 +78,17 @@ fn fixed_funs() -> TokenStream {
             lightness: f32,
             opacity: f32,
         ) -> Styling<Home> {
-            self.add_attr(Subject::attribute(ColorAttribute::Hsla(hue, saturation, lightness, opacity)))
+            self.add_attr(Subject::attribute(AttrValue::Custom(ColorAttribute::Hsla(hue, saturation, lightness, opacity))))
         }
-    };
-    fixed_funs
+
+        // pub fn initial(self) -> Styling<Home> {
+        //     self.add_attr(Subject::attribute(AttrValue::Initial))
+        // }
+
+        // pub fn inherit(self) -> Styling<Home> {
+        //     self.add_attr(Subject::attribute(AttrValue::Inherit))
+        // }
+    }
 }
 
 fn fixed_display() -> TokenStream {
@@ -129,7 +136,7 @@ fn funs(names: Vec<parsing::Name>) -> TokenStream {
         let pascal = x.0.pascal_ident();
         acc.extend(quote! {
              pub fn #snake(self) -> Styling<Home> {
-                 self.add_attr(Subject::attribute(ColorAttribute::#pascal))
+                 self.add_attr(Subject::attribute(AttrValue::Custom(ColorAttribute::#pascal)))
              }
         });
         acc

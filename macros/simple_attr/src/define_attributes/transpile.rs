@@ -230,8 +230,8 @@ fn define_varients_types(lines: &[Line]) -> TokenStream {
                             pub struct #header_pascal;
 
                             impl #group_pascal_attributer for #header_pascal {
-                                fn attribute(#group_snake: #group_pascal) -> Attribute {
-                                    Attribute::#header_pascal(AttrValue::Custom(#group_snake))
+                                fn attribute(#group_snake: AttrValue<#group_pascal>) -> Attribute {
+                                    Attribute::#header_pascal(#group_snake)
                                 }
                             }
 
