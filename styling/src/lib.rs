@@ -3,8 +3,27 @@ mod length;
 mod simple_props;
 // pub mod svg;
 
-use simple_props::{AttrValue, Attribute};
+use simple_props::Attribute;
 use std::{fmt::Display, marker::PhantomData};
+
+#[derive(Debug, Clone)]
+pub enum AttrValue<T> {
+    Initial,
+    Inherit,
+    Custom(T),
+}
+
+impl<T: std::fmt::Display> std::fmt::Display for AttrValue<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use AttrValue::*;
+        let result = match self {
+            Initial => "initial".to_string(),
+            Inherit => "inherit".to_string(),
+            Custom(x) => x.to_string(),
+        };
+        write!(f, "{}", result)
+    }
+}
 
 pub trait Attributer {
     type Kind;

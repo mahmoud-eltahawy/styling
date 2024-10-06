@@ -1,4 +1,4 @@
-use crate::{simple_props::AttrValue, Attributer, Home, Styling};
+use crate::{AttrValue, Attributer, Home, Styling};
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy)]
