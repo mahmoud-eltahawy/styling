@@ -185,4 +185,22 @@ mod tests {
             &result
         );
     }
+
+    #[test]
+    fn inherit_initial() {
+        let result = styling()
+            .accent_color()
+            .initial()
+            .color()
+            .red()
+            .top()
+            .px(12.)
+            .bottom()
+            .inherit()
+            .to_string();
+        assert_eq!(
+            "accent-color:initial;color:Red;top:12px;bottom:inherit;",
+            &result
+        )
+    }
 }
