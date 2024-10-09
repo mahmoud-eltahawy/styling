@@ -119,7 +119,7 @@ fn fixed_colors() -> TokenStream {
 
 fn funs(names: Vec<parsing::Name>) -> TokenStream {
     let funs = names.iter().fold(TokenStream::new(), |mut acc, x| {
-        let snake = x.0.snake_ident();
+        let snake = &x.0;
         let pascal = x.0.pascal_ident();
         acc.extend(quote! {
              pub fn #snake(self) -> Styling<Home> {

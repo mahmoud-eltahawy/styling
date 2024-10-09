@@ -1,5 +1,4 @@
 use proc_macro2::{Ident, Punct, TokenStream, TokenTree};
-use proc_macro_error2::abort;
 
 pub fn parse(input: TokenStream) -> Vec<Name> {
     Block::parse(input).into_vec()
@@ -22,20 +21,12 @@ impl Block {
     fn handle_ident(&mut self, ident: Ident) {
         match self.stage {
             Stage::Fresh => {
-                self.names.push(Name(vec![ident]));
+                self.names.push(Name(ident));
                 self.stage = Stage::Naming;
             }
-            Stage::Naming => match self.names.last_mut() {
-                Some(name) => {
-                    name.0.push(ident);
-                }
-                None => {
-                    abort!(
-                        ident,
-                        "did not expect to be the first name due to header naming state"
-                    );
-                }
-            },
+            Stage::Naming => {
+                self.names.push(Name(ident));
+            }
         }
     }
 
@@ -73,4 +64,4 @@ enum Stage {
 }
 
 #[derive(Debug, Clone)]
-pub struct Name(pub Vec<Ident>);
+pub struct Name(pub Ident);

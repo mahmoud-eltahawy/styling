@@ -2,143 +2,143 @@ use crate::{AttrValue, Attributer, Home, Styling};
 use simple_attr::define_colors;
 
 define_colors!(
-    alice-blue:
-    antique-white:
+    alice_blue:
+    antique_white:
     aqua:
     aquamarine:
     azure:
     beige:
     bisque:
     black:
-    blanched-almond:
+    blanched_almond:
     blue:
-    blue-violet:
+    blue_violet:
     brown:
-    burly-wood:
-    cadet-blue:
+    burly_wood:
+    cadet_blue:
     chartreuse:
     chocolate:
     coral:
-    cornflower-blue:
+    cornflower_blue:
     cornsilk:
     crimson:
     cyan:
-    dark-blue:
-    dark-cyan:
-    dark-golden-rod:
-    dark-gray:
-    dark-grey:
-    dark-green:
-    dark-khaki:
-    dark-magenta:
-    dark-olive-green:
-    dark-orange:
-    dark-orchid:
-    dark-red:
-    dark-salmon:
-    dark-sea-green:
-    dark-slate-blue:
-    dark-slate-gray:
-    dark-slate-grey:
-    dark-turquoise:
-    dark-violet:
-    deep-pink:
-    deep-sky-blue:
-    dim-gray:
-    dim-grey:
-    dodger-blue:
-    fire-brick:
-    floral-white:
-    forest-green:
+    dark_blue:
+    dark_cyan:
+    dark_golden_rod:
+    dark_gray:
+    dark_grey:
+    dark_green:
+    dark_khaki:
+    dark_magenta:
+    dark_olive_green:
+    dark_orange:
+    dark_orchid:
+    dark_red:
+    dark_salmon:
+    dark_sea_green:
+    dark_slate_blue:
+    dark_slate_gray:
+    dark_slate_grey:
+    dark_turquoise:
+    dark_violet:
+    deep_pink:
+    deep_sky_blue:
+    dim_gray:
+    dim_grey:
+    dodger_blue:
+    fire_brick:
+    floral_white:
+    forest_green:
     fuchsia:
     gainsboro:
-    ghost-white:
+    ghost_white:
     gold:
-    golden-rod:
+    golden_rod:
     gray:
     grey:
     green:
-    green-yellow:
-    honey-dew:
-    hot-pink:
-    indian-red:
+    green_yellow:
+    honey_dew:
+    hot_pink:
+    indian_red:
     indigo:
     ivory:
     khaki:
     lavender:
-    lavender-blush:
-    lawn-green:
-    lemon-chiffon:
-    light-blue:
-    light-coral:
-    light-cyan:
-    light-golden-rod-yellow:
-    light-gray:
-    light-grey:
-    light-green:
-    light-pink:
-    light-salmon:
-    light-sea-green:
-    light-sky-blue:
-    light-slate-gray:
-    light-slate-grey:
-    light-steel-blue:
-    light-yellow:
+    lavender_blush:
+    lawn_green:
+    lemon_chiffon:
+    light_blue:
+    light_coral:
+    light_cyan:
+    light_golden_rod_yellow:
+    light_gray:
+    light_grey:
+    light_green:
+    light_pink:
+    light_salmon:
+    light_sea_green:
+    light_sky_blue:
+    light_slate_gray:
+    light_slate_grey:
+    light_steel_blue:
+    light_yellow:
     lime:
-    lime-green:
+    lime_green:
     linen:
     magenta:
     maroon:
-    medium-aqua-marine:
-    medium-blue:
-    medium-orchid:
-    medium-purple:
-    medium-sea-green:
-    medium-slate-blue:
-    medium-spring-green:
-    medium-turquoise:
-    medium-violet-red:
-    midnight-blue:
-    mint-cream:
-    misty-rose:
+    medium_aqua_marine:
+    medium_blue:
+    medium_orchid:
+    medium_purple:
+    medium_sea_green:
+    medium_slate_blue:
+    medium_spring_green:
+    medium_turquoise:
+    medium_violet_red:
+    midnight_blue:
+    mint_cream:
+    misty_rose:
     moccasin:
-    navajo-white:
+    navajo_white:
     navy:
-    old-lace:
+    old_lace:
     olive:
-    olive-drab:
+    olive_drab:
     orange:
-    orange-red:
+    orange_red:
     orchid:
-    pale-golden-rod:
-    pale-green:
-    pale-turquoise:
-    pale-violet-red:
-    papaya-whip:
-    peach-puff:
+    pale_golden_rod:
+    pale_green:
+    pale_turquoise:
+    pale_violet_red:
+    papaya_whip:
+    peach_puff:
     peru:
     pink:
     plum:
-    powder-blue:
+    powder_blue:
     purple:
-    rebecca-purple:
+    rebecca_purple:
     red:
-    rosy-brown:
-    royal-blue:
-    saddle-brown:
+    rosy_brown:
+    royal_blue:
+    saddle_brown:
     salmon:
-    sandy-brown:
-    sea-green:
-    sea-shell:
+    sandy_brown:
+    sea_green:
+    sea_shell:
     sienna:
     silver:
-    sky-blue:
-    slate-blue:
-    slate-gray:
-    slate-grey:
+    sky_blue:
+    slate_blue:
+    slate_gray:
+    slate_grey:
     snow:
-    spring-green:
-    steel-blue:
+    spring_green:
+    steel_blue:
     tan:
     teal:
     thistle:
@@ -147,7 +147,7 @@ define_colors!(
     violet:
     wheat:
     white:
-    white-smoke:
+    white_smoke:
     yellow:
-    yellow-green
+    yellow_green
 );
