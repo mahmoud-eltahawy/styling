@@ -35,7 +35,9 @@ impl NameCases for proc_macro2::Ident {
     }
 
     fn pascal(&self) -> String {
-        self.to_string().to_case(Case::Pascal)
+        self.to_string()
+            .from_case(Case::Snake)
+            .to_case(Case::Pascal)
     }
 
     fn pascal_ident(&self) -> proc_macro2::Ident {
@@ -43,6 +45,6 @@ impl NameCases for proc_macro2::Ident {
     }
 
     fn kebab(&self) -> String {
-        self.to_string().to_case(Case::Kebab)
+        self.to_string().from_case(Case::Snake).to_case(Case::Kebab)
     }
 }
