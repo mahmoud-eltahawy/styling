@@ -18,7 +18,7 @@ struct Block {
 impl Block {
     fn new() -> Self {
         Self {
-            stage: Stage::Lhs(LhsStage::FirstNaming),
+            stage: Stage::Lhs(LhsStage::Header),
             lines: Vec::new(),
         }
     }
@@ -29,76 +29,73 @@ impl Block {
             return;
         }
         match &self.stage {
-            Stage::Lhs(lhs) => match lhs {
-                LhsStage::FirstNaming => {
-                    self.lines.push({
-                        Line {
-                            headers: vec![Name {
-                                docs: None,
-                                snake_ident: ident,
-                            }],
-                            attrs: Attrs::List(Vec::new()),
+            Stage::Lhs(LhsStage::Header) => {
+                self.lines.push({
+                    Line {
+                        header: Name {
+                            docs: None,
+                            snake_ident: ident,
+                        },
+                        minions: Vec::new(),
+                        attrs: Attrs::List(Vec::new()),
+                    }
+                });
+            }
+            Stage::Lhs(LhsStage::Minion) => match self.lines.last_mut() {
+                Some(Line {
+                    minions: rest_headers,
+                    ..
+                }) => {
+                    rest_headers.push(Name::with(ident));
+                }
+                None => {
+                    abort!(
+                        ident,
+                        "did not expect to be the first line due to first header naming state"
+                    )
+                }
+            },
+            Stage::Rhs(RhsStage::Start) => match self.lines.last_mut() {
+                Some(line) => {
+                    line.attrs = Attrs::List(vec![Name::with(ident)]);
+                }
+                None => {
+                    abort!(
+                        ident,
+                        "did not expect to be the first line due to first attr naming state"
+                    )
+                }
+            },
+            Stage::Rhs(RhsStage::Refresh) => match self.lines.last_mut() {
+                Some(Line { attrs, .. }) => match attrs {
+                    Attrs::List(list) => {
+                        list.push(Name::with(ident));
+                    }
+                    Attrs::Group(_) => abort!(ident, "did not expect grouping"),
+                },
+                None => {
+                    abort!(
+                        ident,
+                        "did not expect to be the first line due to first attr naming state"
+                    )
+                }
+            },
+            Stage::Rhs(RhsStage::Grouping) => match self.lines.last_mut() {
+                Some(line) => {
+                    line.attrs = Attrs::Group(match ident.to_string().to_lowercase().as_str() {
+                        "color" => AttrGroup::Color,
+                        "length" => AttrGroup::Length,
+                        _ => {
+                            abort!(ident, "unrecognized group");
                         }
                     });
                 }
-                LhsStage::FreshNaming => match self.lines.last_mut() {
-                    Some(Line {
-                        headers: header, ..
-                    }) => {
-                        header.push(Name::with(ident));
-                    }
-                    None => {
-                        abort!(
-                            ident,
-                            "did not expect to be the first line due to first header naming state"
-                        )
-                    }
-                },
-            },
-            Stage::Rhs(rhs) => match rhs {
-                RhsStage::FirstNaming => match self.lines.last_mut() {
-                    Some(line) => {
-                        line.attrs = Attrs::List(vec![Name::with(ident)]);
-                    }
-                    None => {
-                        abort!(
-                            ident,
-                            "did not expect to be the first line due to first attr naming state"
-                        )
-                    }
-                },
-                RhsStage::FreshNaming => match self.lines.last_mut() {
-                    Some(Line { attrs, .. }) => match attrs {
-                        Attrs::List(list) => {
-                            list.push(Name::with(ident));
-                        }
-                        Attrs::Group(_) => abort!(ident, "did not expect grouping"),
-                    },
-                    None => {
-                        abort!(
-                            ident,
-                            "did not expect to be the first line due to first attr naming state"
-                        )
-                    }
-                },
-                RhsStage::Grouping => match self.lines.last_mut() {
-                    Some(line) => {
-                        line.attrs =
-                            Attrs::Group(match ident.to_string().to_lowercase().as_str() {
-                                "color" => AttrGroup::Color,
-                                "length" => AttrGroup::Length,
-                                _ => {
-                                    abort!(ident, "unrecognized group");
-                                }
-                            });
-                    }
-                    None => {
-                        abort!(
-                            ident,
-                            "did not expect to be the first line to be grouping statement"
-                        )
-                    }
-                },
+                None => {
+                    abort!(
+                        ident,
+                        "did not expect to be the first line to be grouping statement"
+                    )
+                }
             },
         };
     }
@@ -106,16 +103,16 @@ impl Block {
     fn handle_punct(&mut self, punct: Punct) {
         match punct.as_char() {
             ';' => {
-                self.stage = Stage::Lhs(LhsStage::FirstNaming);
+                self.stage = Stage::Lhs(LhsStage::Header);
             }
             ',' => {
-                self.stage = Stage::Lhs(LhsStage::FreshNaming);
+                self.stage = Stage::Lhs(LhsStage::Minion);
             }
             ':' => {
-                self.stage = Stage::Rhs(RhsStage::FirstNaming);
+                self.stage = Stage::Rhs(RhsStage::Start);
             }
             '|' => {
-                self.stage = Stage::Rhs(RhsStage::FreshNaming);
+                self.stage = Stage::Rhs(RhsStage::Refresh);
             }
             _ => (),
         }
@@ -126,9 +123,16 @@ impl Block {
             abort!(literal, "can not add docs at beginning");
         };
         let name = match &self.stage {
-            Stage::Lhs(_) => line.headers.last_mut().unwrap(),
+            Stage::Lhs(LhsStage::Header) => &mut line.header,
+            Stage::Lhs(LhsStage::Minion) => match line.minions.last_mut() {
+                Some(minion) => minion,
+                None => abort!(literal, "docs comes after header identifier not before"),
+            },
             Stage::Rhs(_) => match &mut line.attrs {
-                Attrs::List(list) => list.last_mut().unwrap(),
+                Attrs::List(list) => match list.last_mut() {
+                    Some(attr) => attr,
+                    None => abort!(literal, "docs comes after attribute identifier not before"),
+                },
                 Attrs::Group(_) => abort!(literal, "groups can not be documented"),
             },
         };
@@ -172,14 +176,14 @@ enum Stage {
 
 #[derive(Debug)]
 enum LhsStage {
-    FirstNaming,
-    FreshNaming,
+    Header,
+    Minion,
 }
 
 #[derive(Debug)]
 enum RhsStage {
-    FirstNaming,
-    FreshNaming,
+    Start,
+    Refresh,
     Grouping,
 }
 
@@ -207,8 +211,17 @@ impl Display for AttrGroup {
 
 #[derive(Debug, Clone)]
 pub struct Line {
-    pub headers: Vec<Name>,
+    pub header: Name,
+    pub minions: Vec<Name>,
     pub attrs: Attrs,
+}
+
+impl Line {
+    pub fn headers(&self) -> Vec<&Name> {
+        let mut result = Vec::from([&self.header]);
+        result.extend(self.minions.iter().collect::<Vec<_>>());
+        result
+    }
 }
 
 #[derive(Debug, Clone)]

@@ -31,7 +31,7 @@ fn simple_varients_funs(lines: &[Line]) -> TokenStream {
     lines
         .iter()
         .flat_map(|x| match &x.attrs {
-            Attrs::List(attrs) => Some((&x.headers, attrs)),
+            Attrs::List(attrs) => Some((x.headers(), attrs)),
             Attrs::Group(_) => None,
         })
         .fold(TokenStream::new(), |mut acc, (headers, attrs)| {
@@ -62,13 +62,13 @@ fn define_attribute(lines: &[Line]) -> TokenStream {
     let simple_ones = lines.iter().fold(TokenStream::new(), |mut acc, x| {
         match &x.attrs {
             Attrs::List(_) => {
-                for header in &x.headers {
+                for header in x.headers() {
                     let header = header.snake_ident.pascal_ident();
                     acc.extend(quote! {#header(AttrValue<#header>),});
                 }
             }
             Attrs::Group(group) => {
-                for header in &x.headers {
+                for header in x.headers() {
                     let outer = header.snake_ident.pascal_ident();
                     let inner = match group {
                         AttrGroup::Color => format_ident!("ColorAttribute"),
@@ -80,7 +80,7 @@ fn define_attribute(lines: &[Line]) -> TokenStream {
         }
         acc
     });
-    let eq_attrs = lines.iter().flat_map(|x| &x.headers).enumerate().fold(
+    let eq_attrs = lines.iter().flat_map(|x| x.headers()).enumerate().fold(
         TokenStream::new(),
         |mut acc, (index, name)| {
             let name_pascal = name.snake_ident.pascal_ident();
@@ -92,7 +92,7 @@ fn define_attribute(lines: &[Line]) -> TokenStream {
     let attrs_display =
         lines
             .iter()
-            .flat_map(|x| &x.headers)
+            .flat_map(|x| x.headers())
             .fold(TokenStream::new(), |mut acc, x| {
                 let pascal = x.snake_ident.pascal_ident();
                 let kebab = x.kebab();
@@ -145,7 +145,7 @@ fn transformers(lines: &[Line]) -> TokenStream {
                 quote! {#[doc = #docs]}
             }
         };
-        for header in &line.headers {
+        for header in line.headers() {
             let name_docs = header
                 .docs
                 .as_ref()
@@ -182,7 +182,7 @@ fn define_varients_types(lines: &[Line]) -> TokenStream {
                     });
                     acc
                 });
-                line.headers
+                line.headers()
                     .iter()
                     .fold(TokenStream::new(), |mut acc, header| {
                         let header_pascal = header.snake_ident.pascal_ident();
@@ -196,7 +196,7 @@ fn define_varients_types(lines: &[Line]) -> TokenStream {
                     })
             }
             Attrs::Group(group) => {
-                line.headers
+                line.headers()
                     .iter()
                     .fold(TokenStream::new(), |mut acc, header| {
                         let header_pascal = header.snake_ident.pascal_ident();
@@ -226,7 +226,7 @@ fn display_varients_types(lines: &[Line]) -> TokenStream {
     lines
         .iter()
         .flat_map(|x| match &x.attrs {
-            Attrs::List(attrs) => Some((&x.headers, attrs)),
+            Attrs::List(attrs) => Some((x.headers(), attrs)),
             Attrs::Group(_) => None,
         })
         .fold(TokenStream::new(), |mut acc, (headers, attrs)| {
