@@ -12,8 +12,8 @@ border_bottom_color "the color of an element's bottom border.",
 caret_color "color of the cursor in input elements:",
 outline_color "specifies the color of an outline.",
 color "specifies the color of text."
-are color;
-font_size,top,bottom,left,right,margin,height,width,padding are length;
+are colors;
+font_size,top,bottom,left,right,margin,height,width,padding are lengths;
 
 border_style "sets the style of an element's four borders.",
 border_block_start_style "sets the style of an element's border at the start in the block direction.",

@@ -82,13 +82,7 @@ impl Block {
             },
             Stage::Rhs(RhsStage::Grouping) => match self.lines.last_mut() {
                 Some(line) => {
-                    line.attrs = Attrs::Group(match ident.to_string().to_lowercase().as_str() {
-                        "color" => AttrGroup::Color,
-                        "length" => AttrGroup::Length,
-                        _ => {
-                            abort!(ident, "unrecognized group");
-                        }
-                    });
+                    line.attrs = Attrs::Group(AttrGroup::from(ident));
                 }
                 None => {
                     abort!(
@@ -197,6 +191,18 @@ pub enum Attrs {
 pub enum AttrGroup {
     Color,
     Length,
+}
+
+impl From<Ident> for AttrGroup {
+    fn from(value: Ident) -> Self {
+        match value.to_string().to_lowercase().as_str() {
+            "color" | "colors" => AttrGroup::Color,
+            "length" | "lengths" => AttrGroup::Length,
+            _ => {
+                abort!(value, "unrecognized group");
+            }
+        }
+    }
 }
 
 impl Display for AttrGroup {
