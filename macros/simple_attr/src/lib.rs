@@ -1,5 +1,6 @@
 extern crate proc_macro;
 
+use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro_error2::proc_macro_error;
 use quote::format_ident;
@@ -23,29 +24,18 @@ pub fn define_colors(input: TokenStream) -> TokenStream {
 
 pub(crate) trait NameCases {
     fn snake(&self) -> String;
-    fn snake_ident(&self) -> proc_macro2::Ident;
     fn pascal(&self) -> String;
     fn pascal_ident(&self) -> proc_macro2::Ident;
     fn kebab(&self) -> String;
 }
 
-impl NameCases for Vec<proc_macro2::Ident> {
+impl NameCases for proc_macro2::Ident {
     fn snake(&self) -> String {
-        self.iter()
-            .map(|x| x.to_string())
-            .collect::<Vec<_>>()
-            .join("_")
-    }
-
-    fn snake_ident(&self) -> proc_macro2::Ident {
-        format_ident!("{}", self.snake())
+        self.to_string()
     }
 
     fn pascal(&self) -> String {
-        self.iter()
-            .map(|x| x.to_string())
-            .map(|x| x[0..1].to_uppercase() + &x[1..])
-            .collect()
+        self.to_string().to_case(Case::Pascal)
     }
 
     fn pascal_ident(&self) -> proc_macro2::Ident {
@@ -53,9 +43,6 @@ impl NameCases for Vec<proc_macro2::Ident> {
     }
 
     fn kebab(&self) -> String {
-        self.iter()
-            .map(|x| x.to_string())
-            .collect::<Vec<_>>()
-            .join("-")
+        self.to_string().to_case(Case::Kebab)
     }
 }

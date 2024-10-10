@@ -129,6 +129,8 @@ mod tests {
     #[test]
     fn simple_attributes() {
         let result = styling()
+            .transform_style()
+            .preserve_3d()
             .all()
             .initial()
             .align_content()
@@ -137,7 +139,7 @@ mod tests {
             .stretch()
             .to_string();
         assert_eq!(
-            "all:initial;align-content:center;align-items:stretch;",
+            "transform-style:preserve-3d;all:initial;align-content:center;align-items:stretch;",
             &result
         );
 

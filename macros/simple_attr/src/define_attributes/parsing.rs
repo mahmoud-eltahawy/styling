@@ -35,19 +35,17 @@ impl Block {
                         Line {
                             headers: vec![Name {
                                 docs: None,
-                                atoms: vec![ident],
+                                snake_ident: ident,
                             }],
                             attrs: Attrs::List(Vec::new()),
                         }
                     });
-                    self.stage = Stage::Lhs(LhsStage::Naming);
                 }
                 LhsStage::FreshNaming => match self.lines.last_mut() {
                     Some(Line {
                         headers: header, ..
                     }) => {
                         header.push(Name::with(ident));
-                        self.stage = Stage::Lhs(LhsStage::Naming);
                     }
                     None => {
                         abort!(
@@ -56,25 +54,11 @@ impl Block {
                         )
                     }
                 },
-                LhsStage::Naming => {
-                    match self.lines.last_mut().and_then(|x| x.headers.last_mut()) {
-                        Some(name) => {
-                            name.add(ident);
-                        }
-                        None => {
-                            abort!(
-                                ident,
-                                "did not expect to be the first line due to header naming state"
-                            )
-                        }
-                    }
-                }
             },
             Stage::Rhs(rhs) => match rhs {
                 RhsStage::FirstNaming => match self.lines.last_mut() {
                     Some(line) => {
                         line.attrs = Attrs::List(vec![Name::with(ident)]);
-                        self.stage = Stage::Rhs(RhsStage::Naming);
                     }
                     None => {
                         abort!(
@@ -87,7 +71,6 @@ impl Block {
                     Some(Line { attrs, .. }) => match attrs {
                         Attrs::List(list) => {
                             list.push(Name::with(ident));
-                            self.stage = Stage::Rhs(RhsStage::Naming);
                         }
                         Attrs::Group(_) => abort!(ident, "did not expect grouping"),
                     },
@@ -98,27 +81,6 @@ impl Block {
                         )
                     }
                 },
-                RhsStage::Naming => {
-                    match self
-                        .lines
-                        .last_mut()
-                        .and_then(|line| match &mut line.attrs {
-                            Attrs::List(list) => Some(list),
-                            Attrs::Group(_) => None,
-                        })
-                        .and_then(|x| x.last_mut())
-                    {
-                        Some(name) => {
-                            name.add(ident);
-                        }
-                        None => {
-                            abort!(
-                            ident,
-                            "did not expect to be the first line or name due to attr naming state"
-                        )
-                        }
-                    }
-                }
                 RhsStage::Grouping => match self.lines.last_mut() {
                     Some(line) => {
                         line.attrs =
@@ -129,7 +91,6 @@ impl Block {
                                     abort!(ident, "unrecognized group");
                                 }
                             });
-                        self.stage = Stage::Rhs(RhsStage::Naming);
                     }
                     None => {
                         abort!(
@@ -165,12 +126,11 @@ impl Block {
             abort!(literal, "can not add docs at beginning");
         };
         let name = match &self.stage {
-            Stage::Lhs(LhsStage::Naming) => line.headers.last_mut().unwrap(),
-            Stage::Rhs(RhsStage::Naming) => match line.headers.last_mut() {
-                Some(name) => name,
-                None => abort!(literal, "did not expect to be first atom in the name"),
+            Stage::Lhs(_) => line.headers.last_mut().unwrap(),
+            Stage::Rhs(_) => match &mut line.attrs {
+                Attrs::List(list) => list.last_mut().unwrap(),
+                Attrs::Group(_) => abort!(literal, "groups can not be documented"),
             },
-            _ => abort!(literal, "docs can be added only after attribute!"),
         };
         let docs = literal
             .to_string()
@@ -214,14 +174,12 @@ enum Stage {
 enum LhsStage {
     FirstNaming,
     FreshNaming,
-    Naming,
 }
 
 #[derive(Debug)]
 enum RhsStage {
     FirstNaming,
     FreshNaming,
-    Naming,
     Grouping,
 }
 
@@ -256,22 +214,18 @@ pub struct Line {
 #[derive(Debug, Clone)]
 pub struct Name {
     pub docs: Option<String>,
-    pub atoms: Vec<Ident>,
+    pub snake_ident: Ident,
 }
 
 impl Name {
     fn with(ident: Ident) -> Self {
         Self {
             docs: None,
-            atoms: vec![ident],
+            snake_ident: ident,
         }
     }
 
-    fn add(&mut self, other: Ident) {
-        self.atoms.push(other);
-    }
-
     pub fn kebab(&self) -> String {
-        self.atoms.kebab()
+        self.snake_ident.kebab()
     }
 }
