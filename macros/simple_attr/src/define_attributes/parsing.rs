@@ -37,18 +37,7 @@ impl Block {
                     )
                 }
             },
-            Stage::Rhs(RhsStage::Start) => match self.lines.last_mut() {
-                Some(line) => {
-                    line.attrs = Attrs::List(vec![Name::with(ident)]);
-                }
-                None => {
-                    abort!(
-                        ident,
-                        "did not expect to be the first line due to first attr naming state"
-                    )
-                }
-            },
-            Stage::Rhs(RhsStage::Refresh) => match self.lines.last_mut() {
+            Stage::Rhs(RhsStage::Varients) => match self.lines.last_mut() {
                 Some(Line { attrs, .. }) => match attrs {
                     Attrs::List(list) => {
                         list.push(Name::with(ident));
@@ -133,8 +122,7 @@ impl From<Punct> for Stage {
         match value.as_char() {
             ';' => Stage::Lhs(LhsStage::Header),
             ',' => Stage::Lhs(LhsStage::Minion),
-            ':' => Stage::Rhs(RhsStage::Start),
-            '|' => Stage::Rhs(RhsStage::Refresh),
+            ':' | '|' => Stage::Rhs(RhsStage::Varients),
             '=' => Stage::Rhs(RhsStage::Grouping),
             p => abort!(value, format!("{p} unrecognized punct")),
         }
@@ -149,8 +137,7 @@ enum LhsStage {
 
 #[derive(Debug)]
 enum RhsStage {
-    Start,
-    Refresh,
+    Varients,
     Grouping,
 }
 
