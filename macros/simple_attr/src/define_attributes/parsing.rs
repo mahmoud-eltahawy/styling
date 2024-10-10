@@ -24,29 +24,11 @@ impl Block {
     }
 
     fn handle_ident(&mut self, ident: Ident) {
-        if ident.to_string().as_str() == "are" {
-            self.stage = Stage::Rhs(RhsStage::Grouping);
-            return;
-        }
         match &self.stage {
-            Stage::Lhs(LhsStage::Header) => {
-                self.lines.push({
-                    Line {
-                        header: Name {
-                            docs: None,
-                            snake_ident: ident,
-                        },
-                        minions: Vec::new(),
-                        attrs: Attrs::List(Vec::new()),
-                    }
-                });
-            }
+            Stage::Lhs(LhsStage::Header) => self.lines.push(Line::with(ident)),
             Stage::Lhs(LhsStage::Minion) => match self.lines.last_mut() {
-                Some(Line {
-                    minions: rest_headers,
-                    ..
-                }) => {
-                    rest_headers.push(Name::with(ident));
+                Some(line) => {
+                    line.minions.push(Name::with(ident));
                 }
                 None => {
                     abort!(
@@ -94,24 +76,6 @@ impl Block {
         };
     }
 
-    fn handle_punct(&mut self, punct: Punct) {
-        match punct.as_char() {
-            ';' => {
-                self.stage = Stage::Lhs(LhsStage::Header);
-            }
-            ',' => {
-                self.stage = Stage::Lhs(LhsStage::Minion);
-            }
-            ':' => {
-                self.stage = Stage::Rhs(RhsStage::Start);
-            }
-            '|' => {
-                self.stage = Stage::Rhs(RhsStage::Refresh);
-            }
-            _ => (),
-        }
-    }
-
     fn handle_literal(&mut self, literal: proc_macro2::Literal) {
         let Some(line) = self.lines.last_mut() else {
             abort!(literal, "can not add docs at beginning");
@@ -130,11 +94,7 @@ impl Block {
                 Attrs::Group(_) => abort!(literal, "groups can not be documented"),
             },
         };
-        let docs = literal
-            .to_string()
-            .chars()
-            .filter(|x| *x != '"')
-            .collect::<String>();
+        let docs = literal.to_string();
         name.docs = Some(docs);
     }
 
@@ -144,8 +104,8 @@ impl Block {
                 TokenTree::Ident(ident) => {
                     block.handle_ident(ident);
                 }
-                TokenTree::Punct(x) => {
-                    block.handle_punct(x);
+                TokenTree::Punct(punct) => {
+                    block.stage = Stage::from(punct);
                 }
                 TokenTree::Literal(literal) => {
                     block.handle_literal(literal);
@@ -166,6 +126,19 @@ impl Block {
 enum Stage {
     Lhs(LhsStage),
     Rhs(RhsStage),
+}
+
+impl From<Punct> for Stage {
+    fn from(value: Punct) -> Self {
+        match value.as_char() {
+            ';' => Stage::Lhs(LhsStage::Header),
+            ',' => Stage::Lhs(LhsStage::Minion),
+            ':' => Stage::Rhs(RhsStage::Start),
+            '|' => Stage::Rhs(RhsStage::Refresh),
+            '=' => Stage::Rhs(RhsStage::Grouping),
+            p => abort!(value, format!("{p} unrecognized punct")),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -223,6 +196,16 @@ pub struct Line {
 }
 
 impl Line {
+    fn with(ident: Ident) -> Self {
+        Self {
+            header: Name {
+                docs: None,
+                snake_ident: ident,
+            },
+            minions: Vec::new(),
+            attrs: Attrs::List(Vec::new()),
+        }
+    }
     pub fn headers(&self) -> Vec<&Name> {
         let mut result = Vec::from([&self.header]);
         result.extend(self.minions.iter().collect::<Vec<_>>());
