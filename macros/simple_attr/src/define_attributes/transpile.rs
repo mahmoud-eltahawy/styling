@@ -146,12 +146,25 @@ fn transformers(lines: &[Line]) -> TokenStream {
             }
         };
         for header in line.headers() {
-            let name_docs = header.docs.as_deref().unwrap_or("no description found");
+            let name_docs = header
+                .docs
+                .as_deref()
+                .map(|x| {
+                    let mut lines = x.lines().collect::<Vec<_>>();
+                    lines.remove(lines.len() - 1);
+                    lines.remove(0);
+                    lines.iter().fold(TokenStream::new(), |mut acc, x| {
+                        acc.extend(quote! {
+                        #[doc = #x]});
+                        acc
+                    })
+                })
+                .unwrap_or(quote! {#[doc = "no description found"]});
             let pascal = header.snake_ident.pascal_ident();
             let snake = &header.snake_ident;
             acc.extend(quote!(
                 #[doc = "# Definition and Usage"]
-                #[doc = #name_docs]
+                #name_docs
                 #[doc = "## possible values"]
                 #docs_varients
                 pub fn #snake(self) -> Styling<#pascal> {
