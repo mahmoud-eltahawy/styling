@@ -1,7 +1,13 @@
 use crate::{color::ColorAttribute, length::LengthAttribute, AttrValue, Attributer, Home, Styling};
 
 simple_attr::define_attributes!(
-accent_color r#"the accent color for user_interface controls like: <input type="checkbox">, <input type="radio">, <input type="range"> and <progress>."#,
+accent_color r#"
+    the accent color for user_interface controls like: 
+        \<input type="checkbox">,
+        \<input type="radio">,
+        \<input type="range">
+        and \<progress>.
+"#,
 background_color "the background color of an element.",
 border_color "the color of an element's four borders. This property can have from one to four values.",
 border_block_color "color of an element's borders in the block direction.",
@@ -29,10 +35,21 @@ outline_style "the style of an outline.",
 column_rule_style "specifies the style of the rule between columns."
 :none hidden dotted dashed solid double groove ridge inset outset;
 
-align_content "how flex lines are distributed along the cross axis in a flexbox container."
+align_content r#"
+    The align-content property specifies how flex lines are distributed along the cross axis in a flexbox container.
+    In flexbox layout, the main axis is in the flex-direction (default is 'row', horizontal), and the cross axis is perpendicular to the main axis (default is 'column', vertical).
+    Tip: Use the justify-content property to align the items on the main axis (horizontally).
+    Note: The align-content property can also be used on a grid container to align grid items in the block direction. For pages in English, block direction is downward and inline direction is left to right.    
+"#
 :stretch center flex_start flex_end space_between space_around space_evenly;
 
-align_items "the default alignment for items inside a flexbox or grid container."
+align_items r#"
+    The align-items property specifies the default alignment for items inside a flexbox or grid container.
+        In a flexbox container, the flexbox items are aligned on the cross axis, which is vertical by default (opposite of flex-direction).
+        In a grid container, the grid items are aligned in the block direction. For pages in English, block direction is downward and inline direction is left to right.
+    For this property to have any alignment effect, the items need available space around themselves in the appropriate direction.
+    Tip: Use the align-self property of each item to override the align-items property.    
+"#
 :stretch center flex_start flex_end start end baseline;
 
 align_self_ "the alignment in the block direction for the selected item inside a flexbox or grid container."
