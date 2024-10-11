@@ -122,7 +122,7 @@ impl From<Punct> for Stage {
         match value.as_char() {
             ';' => Stage::Lhs(LhsStage::Header),
             ',' => Stage::Lhs(LhsStage::Minion),
-            ':' | '|' => Stage::Rhs(RhsStage::Varients),
+            ':' => Stage::Rhs(RhsStage::Varients),
             '=' => Stage::Rhs(RhsStage::Grouping),
             p => abort!(value, format!("{p} unrecognized punct")),
         }
