@@ -3,6 +3,8 @@ mod length;
 mod simple_props;
 // pub mod svg;
 
+use color::ColorAttribute;
+use length::LengthAttribute;
 use simple_props::Attribute;
 use std::{fmt::Display, marker::PhantomData};
 
@@ -10,6 +12,8 @@ use std::{fmt::Display, marker::PhantomData};
 pub enum AttrValue<T> {
     Initial,
     Inherit,
+    Color(ColorAttribute),
+    Length(LengthAttribute),
     Custom(T),
 }
 
@@ -19,6 +23,8 @@ impl<T: std::fmt::Display> std::fmt::Display for AttrValue<T> {
         let result = match self {
             Initial => "initial".to_string(),
             Inherit => "inherit".to_string(),
+            Color(x) => x.to_string(),
+            Length(x) => x.to_string(),
             Custom(x) => x.to_string(),
         };
         write!(f, "{}", result)

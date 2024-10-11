@@ -48,82 +48,82 @@ impl Display for LengthAttribute {
 
 impl<Subject: Attributer<Kind = LengthAttribute>> Styling<Subject> {
     pub fn px(self, len: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Px(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Px(
             len,
         ))))
     }
     pub fn abs(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Abs(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Abs(
             num,
         ))))
     }
     pub fn cm(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Cm(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Cm(
             num,
         ))))
     }
     pub fn percent(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(
+        self.add_attr(Subject::attribute(AttrValue::Length(
             LengthAttribute::Percent(num),
         )))
     }
     pub fn mm(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Mm(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Mm(
             num,
         ))))
     }
     pub fn inch(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::In(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::In(
             num,
         ))))
     }
     pub fn pt(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Pt(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Pt(
             num,
         ))))
     }
     pub fn pc(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Pc(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Pc(
             num,
         ))))
     }
     pub fn em(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Em(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Em(
             num,
         ))))
     }
     pub fn ex(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Ex(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Ex(
             num,
         ))))
     }
     pub fn ch(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Ch(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Ch(
             num,
         ))))
     }
     pub fn rem_(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Rem(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Rem(
             num,
         ))))
     }
     pub fn vw(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Vw(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Vw(
             num,
         ))))
     }
     pub fn vh(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(LengthAttribute::Vh(
+        self.add_attr(Subject::attribute(AttrValue::Length(LengthAttribute::Vh(
             num,
         ))))
     }
     pub fn vmin(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(
+        self.add_attr(Subject::attribute(AttrValue::Length(
             LengthAttribute::Vmin(num),
         )))
     }
     pub fn vmax(self, num: f32) -> Styling<Home> {
-        self.add_attr(Subject::attribute(AttrValue::Custom(
+        self.add_attr(Subject::attribute(AttrValue::Length(
             LengthAttribute::Vmax(num),
         )))
     }
