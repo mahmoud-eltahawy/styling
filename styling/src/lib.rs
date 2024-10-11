@@ -31,9 +31,13 @@ impl<T: std::fmt::Display> std::fmt::Display for AttrValue<T> {
     }
 }
 
-pub trait Attributer {
+pub trait Attributer: Sized {
     type Kind;
-    fn attribute(len: AttrValue<Self::Kind>) -> Attribute;
+    fn from(kind: AttrValue<<Self as Attributer>::Kind>) -> Self;
+    fn to_attribute(self) -> Attribute;
+    fn attribute(attr: AttrValue<<Self as Attributer>::Kind>) -> Attribute {
+        Self::from(attr).to_attribute()
+    }
 }
 
 impl<T, Subject: Attributer<Kind = T>> Styling<Subject> {
