@@ -146,19 +146,7 @@ fn transformers(lines: &[Line]) -> TokenStream {
             }
         };
         for header in line.headers() {
-            let name_docs = header
-                .docs
-                .as_deref()
-                .and_then(|docs| docs.find('"').map(|i| docs[(i + 1)..].to_string()))
-                .and_then(|docs| {
-                    let docs = docs.chars().collect::<Vec<_>>();
-                    docs.iter()
-                        .rev()
-                        .enumerate()
-                        .find(|(_, x)| **x == '"')
-                        .map(|(i, _)| docs[0..docs.len() - 1 - i].iter().collect::<String>())
-                })
-                .unwrap_or(String::from("no description found"));
+            let name_docs = header.docs.as_deref().unwrap_or("no description found");
             let pascal = header.snake_ident.pascal_ident();
             let snake = &header.snake_ident;
             acc.extend(quote!(
