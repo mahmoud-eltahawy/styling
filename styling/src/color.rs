@@ -2,6 +2,7 @@ use crate::{AttrValue, Attributer, Home, Styling};
 use simple_attr::define_colors;
 
 define_colors!(
+    currentcolor:
     alice_blue:
     antique_white:
     aqua:

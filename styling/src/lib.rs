@@ -224,13 +224,15 @@ mod tests {
             .initial()
             .color()
             .red()
+            .border_color()
+            .currentcolor()
             .top()
             .px(12.)
             .bottom()
             .inherit()
             .to_string();
         assert_eq!(
-            "accent-color:initial;color:Red;top:12px;bottom:inherit;",
+            "accent-color:initial;color:Red;border-color:Currentcolor;top:12px;bottom:inherit;",
             &result
         )
     }
