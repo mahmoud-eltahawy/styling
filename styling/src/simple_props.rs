@@ -38,9 +38,9 @@ specifies the color of an outline.
 color r#"
 specifies the color of text.
 "#
-= colors;
+: $color;
 
-font_size,top,bottom,left,right,margin,height,width,padding = lengths;
+font_size,top,bottom,left,right,margin,height,width,padding : $length;
 
 border_style r#"
 sets the style of an element's four borders.

@@ -51,6 +51,7 @@ impl Block {
             Stage::Rhs(RhsStage::Grouping) => match self.lines.last_mut() {
                 Some(Line { attrs, .. }) => {
                     attrs.push(Attr::Group(AttrGroup::from(ident)));
+                    self.stage = Stage::Rhs(RhsStage::Grouping);
                 }
                 None => {
                     abort!(
@@ -118,7 +119,7 @@ impl From<Punct> for Stage {
             ';' => Stage::Lhs(LhsStage::Header),
             ',' => Stage::Lhs(LhsStage::Minion),
             ':' => Stage::Rhs(RhsStage::Varients),
-            '=' => Stage::Rhs(RhsStage::Grouping),
+            '$' => Stage::Rhs(RhsStage::Grouping),
             p => abort!(value, format!("{p} unrecognized punct")),
         }
     }
@@ -151,8 +152,8 @@ pub enum AttrGroup {
 impl From<Ident> for AttrGroup {
     fn from(value: Ident) -> Self {
         match value.to_string().to_lowercase().as_str() {
-            "color" | "colors" => AttrGroup::Color,
-            "length" | "lengths" => AttrGroup::Length,
+            "color" => AttrGroup::Color,
+            "length" => AttrGroup::Length,
             _ => {
                 abort!(value, "unrecognized group");
             }
