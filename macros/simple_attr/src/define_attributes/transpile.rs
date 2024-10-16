@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::{
-    define_attributes::parsing::{AttrGroup, Attrs},
+    define_attributes::parsing::{Attr, AttrGroup},
     NameCases,
 };
 
@@ -30,22 +30,20 @@ pub(crate) fn transpile(lines: Vec<Line>) -> TokenStream {
 fn simple_varients_funs(lines: &[Line]) -> TokenStream {
     lines
         .iter()
-        .flat_map(|x| match &x.attrs {
-            Attrs::List(attrs) => Some((x.headers(), attrs)),
-            Attrs::Group(_) => None,
-        })
-        .fold(TokenStream::new(), |mut acc, (headers, attrs)| {
-            for header in headers {
+        .fold(TokenStream::new(), |mut acc, x| {
+            for header in x.headers() {
                 let pascal_header = header.snake_ident.pascal_ident();
 
-                let funs = attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-                    let snake = &x.snake_ident;
-                    let pascal = x.snake_ident.pascal_ident();
-                    acc.extend(quote! {
-                        pub fn #snake(self) -> Styling<Home> {
-                            self.add_attr(Attribute::#pascal_header(AttrValue::Custom(#pascal_header::#pascal)))
-                        }
-                    });
+                let funs = x.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+                    if let Attr::Name(x) = x {
+                        let snake = &x.snake_ident;
+                        let pascal = x.snake_ident.pascal_ident();
+                        acc.extend(quote! {
+                            pub fn #snake(self) -> Styling<Home> {
+                                self.add_attr(Attribute::#pascal_header(AttrValue::Custom(#pascal_header::#pascal)))
+                            }
+                        });
+                    }
                     acc
                 });
                 acc.extend(quote! {
@@ -58,23 +56,21 @@ fn simple_varients_funs(lines: &[Line]) -> TokenStream {
         })
 }
 
+//TODO : to be refactored
 fn define_attribute(lines: &[Line]) -> TokenStream {
     let simple_ones = lines.iter().fold(TokenStream::new(), |mut acc, x| {
-        match &x.attrs {
-            Attrs::List(_) => {
-                for header in x.headers() {
-                    let header = header.snake_ident.pascal_ident();
-                    acc.extend(quote! {#header(AttrValue<#header>),});
-                }
+        for header in x.headers() {
+            let header = header.snake_ident.pascal_ident();
+            if x.attrs.iter().any(|x| matches!(x, Attr::Name(_))) {
+                acc.extend(quote! {#header(AttrValue<#header>),});
             }
-            Attrs::Group(group) => {
-                for header in x.headers() {
-                    let outer = header.snake_ident.pascal_ident();
-                    let inner = match group {
+            for attr in &x.attrs {
+                if let Attr::Group(group) = attr {
+                    let group = match group {
                         AttrGroup::Color => format_ident!("ColorAttribute"),
                         AttrGroup::Length => format_ident!("LengthAttribute"),
                     };
-                    acc.extend(quote! {#outer(AttrValue<#inner>),});
+                    acc.extend(quote! {#header(AttrValue<#group>),});
                 }
             }
         }
@@ -133,18 +129,20 @@ fn define_attribute(lines: &[Line]) -> TokenStream {
 
 fn transformers(lines: &[Line]) -> TokenStream {
     let result = lines.iter().fold(TokenStream::new(), |mut acc, line| {
-        let docs_varients = match &line.attrs {
-            Attrs::List(attrs) => attrs.iter().fold(TokenStream::new(), |mut acc, x| {
-                let result = format!("- {}", x.snake_ident.snake());
-                acc.extend(quote! {#[doc = #result]});
-                acc
-            }),
-            Attrs::Group(group) => {
-                let group = group.to_string();
-                let docs = format!("takes same attributes as {group}");
-                quote! {#[doc = #docs]}
+        let docs_varients = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+            match x {
+                Attr::Name(x) => {
+                    let result = format!("- {}", x.snake_ident.snake());
+                    acc.extend(quote! {#[doc = #result]});
+                }
+                Attr::Group(group) => {
+                    let group = group.to_string();
+                    let docs = format!("takes same attributes as {group}");
+                    acc.extend(quote! {#[doc = #docs]})
+                }
             }
-        };
+            acc
+        });
         for header in line.headers() {
             let name_docs = header
                 .docs
@@ -181,81 +179,75 @@ fn transformers(lines: &[Line]) -> TokenStream {
     }
 }
 
+//TODO : to be refactored
 fn define_varients_types(lines: &[Line]) -> TokenStream {
     lines.iter().fold(TokenStream::new(), |mut acc, line| {
-        let quoted = match &line.attrs {
-            Attrs::List(attrs) => {
-                let varients_pascal = attrs.iter().fold(TokenStream::new(), |mut acc, varient| {
-                    let pascal = varient.snake_ident.pascal_ident();
-                    acc.extend(quote! {
-                        #pascal,
-                    });
+        if let Some(Attr::Group(group)) = line.attrs.iter().find(|x| matches!(x, Attr::Group(_))) {
+            for header in line.headers() {
+                let header_pascal = header.snake_ident.pascal_ident();
+                let group_pascal = format_ident!("{}", group.to_string());
+                acc.extend(quote! {
+                    pub struct #header_pascal(AttrValue<#group_pascal>);
+
+                    impl Attributer for #header_pascal {
+                        type Kind = #group_pascal;
+
+                        fn from(kind: AttrValue<Self::Kind>) -> Self {
+                            Self(kind)
+                        }
+
+                        fn to_attribute(self) -> Attribute {
+                            let Self(group) = self;
+                            Attribute::#header_pascal(group)
+                        }
+                    }
+
+                });
+            }
+        } else {
+            let varients_pascal = line
+                .attrs
+                .iter()
+                .fold(TokenStream::new(), |mut acc, varient| {
+                    if let Attr::Name(varient) = varient {
+                        let pascal = varient.snake_ident.pascal_ident();
+                        acc.extend(quote! {
+                            #pascal,
+                        });
+                    }
                     acc
                 });
-                line.headers()
-                    .iter()
-                    .fold(TokenStream::new(), |mut acc, header| {
-                        let header_pascal = header.snake_ident.pascal_ident();
-                        acc.extend(quote!(
-                            #[derive(Debug, Clone)]
-                            pub enum #header_pascal {
-                                #varients_pascal
-                            }
-                        ));
-                        acc
-                    })
+            for header in line.headers() {
+                let header_pascal = header.snake_ident.pascal_ident();
+                acc.extend(quote!(
+                    #[derive(Debug, Clone)]
+                    pub enum #header_pascal {
+                        #varients_pascal
+                    }
+                ));
             }
-            Attrs::Group(group) => {
-                line.headers()
-                    .iter()
-                    .fold(TokenStream::new(), |mut acc, header| {
-                        let header_pascal = header.snake_ident.pascal_ident();
-                        let group_pascal = format_ident!("{}", group.to_string());
-                        acc.extend(quote! {
-                            pub struct #header_pascal(AttrValue<#group_pascal>);
-
-                            impl Attributer for #header_pascal {
-                                type Kind = #group_pascal;
-
-                                fn from(kind: AttrValue<Self::Kind>) -> Self {
-                                    Self(kind)
-                                }
-
-                                fn to_attribute(self) -> Attribute {
-                                    let Self(group) = self;
-                                    Attribute::#header_pascal(group)
-                                }
-                            }
-
-                        });
-                        acc
-                    })
-            }
-        };
-        acc.extend(quoted);
+        }
         acc
     })
 }
 
+//TODO : to be refactored
 fn display_varients_types(lines: &[Line]) -> TokenStream {
-    lines
-        .iter()
-        .flat_map(|x| match &x.attrs {
-            Attrs::List(attrs) => Some((x.headers(), attrs)),
-            Attrs::Group(_) => None,
-        })
-        .fold(TokenStream::new(), |mut acc, (headers, attrs)| {
-            for header in headers {
-                let header_pascal = header.snake_ident.pascal_ident();
-                let varients_display = attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+    lines.iter().fold(TokenStream::new(), |mut acc, line| {
+        for header in line.headers() {
+            let header_pascal = header.snake_ident.pascal_ident();
+            let varients_display = line.attrs.iter().fold(TokenStream::new(), |mut acc, x| {
+                if let Attr::Name(x) = x {
                     let pascal = x.snake_ident.pascal_ident();
                     let untrailed_kebab = clear_trailing_dash(x.kebab());
                     acc.extend(quote!(
                         Self::#pascal => #untrailed_kebab,
                     ));
-                    acc
-                });
+                }
+                acc
+            });
 
+            if line.attrs.iter().all(|x| !matches!(x, Attr::Group(_))) {
                 acc.extend(quote!(
                     impl std::fmt::Display for #header_pascal {
                         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -267,8 +259,9 @@ fn display_varients_types(lines: &[Line]) -> TokenStream {
                     }
                 ));
             }
-            acc
-        })
+        }
+        acc
+    })
 }
 
 fn clear_trailing_dash(input: String) -> String {

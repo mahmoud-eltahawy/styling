@@ -38,12 +38,9 @@ impl Block {
                 }
             },
             Stage::Rhs(RhsStage::Varients) => match self.lines.last_mut() {
-                Some(Line { attrs, .. }) => match attrs {
-                    Attrs::List(list) => {
-                        list.push(Name::with(ident));
-                    }
-                    Attrs::Group(_) => abort!(ident, "did not expect grouping"),
-                },
+                Some(Line { attrs, .. }) => {
+                    attrs.push(Attr::Name(Name::with(ident)));
+                }
                 None => {
                     abort!(
                         ident,
@@ -52,8 +49,8 @@ impl Block {
                 }
             },
             Stage::Rhs(RhsStage::Grouping) => match self.lines.last_mut() {
-                Some(line) => {
-                    line.attrs = Attrs::Group(AttrGroup::from(ident));
+                Some(Line { attrs, .. }) => {
+                    attrs.push(Attr::Group(AttrGroup::from(ident)));
                 }
                 None => {
                     abort!(
@@ -75,12 +72,10 @@ impl Block {
                 Some(minion) => minion,
                 None => abort!(literal, "docs comes after header identifier not before"),
             },
-            Stage::Rhs(_) => match &mut line.attrs {
-                Attrs::List(list) => match list.last_mut() {
-                    Some(attr) => attr,
-                    None => abort!(literal, "docs comes after attribute identifier not before"),
-                },
-                Attrs::Group(_) => abort!(literal, "groups can not be documented"),
+            Stage::Rhs(_) => match line.attrs.last_mut() {
+                Some(Attr::Name(attr)) => attr,
+                Some(Attr::Group(_)) => abort!(literal, "groups can not be documented"),
+                None => abort!(literal, "docs can not come before attributes"),
             },
         };
         let docs = literal.to_string();
@@ -142,8 +137,8 @@ enum RhsStage {
 }
 
 #[derive(Debug, Clone)]
-pub enum Attrs {
-    List(Vec<Name>),
+pub enum Attr {
+    Name(Name),
     Group(AttrGroup),
 }
 
@@ -179,7 +174,7 @@ impl Display for AttrGroup {
 pub struct Line {
     pub header: Name,
     pub minions: Vec<Name>,
-    pub attrs: Attrs,
+    pub attrs: Vec<Attr>,
 }
 
 impl Line {
@@ -190,7 +185,7 @@ impl Line {
                 snake_ident: ident,
             },
             minions: Vec::new(),
-            attrs: Attrs::List(Vec::new()),
+            attrs: Vec::new(),
         }
     }
     pub fn headers(&self) -> Vec<&Name> {
