@@ -39,7 +39,7 @@ impl Block {
             },
             Stage::Rhs(RhsStage::Varients) => match self.lines.last_mut() {
                 Some(Line { attrs, .. }) => {
-                    attrs.push(Attr::Name(Name::with(ident)));
+                    attrs.push(Name::with(ident));
                 }
                 None => {
                     abort!(
@@ -49,8 +49,13 @@ impl Block {
                 }
             },
             Stage::Rhs(RhsStage::Grouping) => match self.lines.last_mut() {
-                Some(Line { attrs, .. }) => {
-                    attrs.push(Attr::Group(AttrGroup::from(ident)));
+                Some(line) => {
+                    match line.group {
+                        Some(_) => abort!(ident, "can not have multiple groups"),
+                        None => {
+                            line.group = Some(AttrGroup::from(ident));
+                        }
+                    }
                     self.stage = Stage::Rhs(RhsStage::Grouping);
                 }
                 None => {
@@ -74,8 +79,7 @@ impl Block {
                 None => abort!(literal, "docs comes after header identifier not before"),
             },
             Stage::Rhs(_) => match line.attrs.last_mut() {
-                Some(Attr::Name(attr)) => attr,
-                Some(Attr::Group(_)) => abort!(literal, "groups can not be documented"),
+                Some(attr) => attr,
                 None => abort!(literal, "docs can not come before attributes"),
             },
         };
@@ -138,12 +142,6 @@ enum RhsStage {
 }
 
 #[derive(Debug, Clone)]
-pub enum Attr {
-    Name(Name),
-    Group(AttrGroup),
-}
-
-#[derive(Debug, Clone)]
 pub enum AttrGroup {
     Color,
     Length,
@@ -175,7 +173,8 @@ impl Display for AttrGroup {
 pub struct Line {
     pub header: Name,
     pub minions: Vec<Name>,
-    pub attrs: Vec<Attr>,
+    pub group: Option<AttrGroup>,
+    pub attrs: Vec<Name>,
 }
 
 impl Line {
@@ -186,6 +185,7 @@ impl Line {
                 snake_ident: ident,
             },
             minions: Vec::new(),
+            group: None,
             attrs: Vec::new(),
         }
     }
