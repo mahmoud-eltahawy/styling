@@ -28,6 +28,10 @@ fn simple_varients_funs(lines: &[Line]) -> TokenStream {
     lines
         .iter()
         .fold(TokenStream::new(), |mut acc, x| {
+            if x.group.is_some() {
+                //TODO : remove this
+                return acc;
+            }
             for header in x.headers() {
                 let pascal_header = header.snake_ident.pascal_ident();
 

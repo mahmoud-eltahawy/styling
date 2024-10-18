@@ -8,35 +8,165 @@ the accent color for user_interface controls like:
     \<input type="range">
     and \<progress>.
 "#,
+caret_color r#"
+The caret-color property specifies the color of the cursor (caret) in inputs, textareas, or any element that is editable.
+"#
+: auto $color;
+
 background_color r#"
-the background color of an element.
+The background-color property sets the background color of an element.
+
+The background of an element is the total size of the element, including padding and border (but not the margin).
+
+Tip: Use a background color and a text color that makes the text easy to read.
 "#,
 border_color r#"
-the color of an element's four borders. This property can have from one to four values.
+The border-color property sets the color of an element's four borders. This property can have from one to four values.
+
+If the border-color property has four values:
+
+    border-color: red green blue pink;
+        top border is red
+        right border is green
+        bottom border is blue
+        left border is pink
+
+If the border-color property has three values:
+
+    border-color: red green blue;
+        top border is red
+        right and left borders are green
+        bottom border is blue
+
+If the border-color property has two values:
+
+    border-color: red green;
+        top and bottom borders are red
+        right and left borders are green
+
+If the border-color property has one value:
+
+    border-color: red;
+        all four borders are red
+
+Note: Always declare the border-style property before the border-color property. An element must have borders before you can change the color.
 "#,
 border_block_color r#"
-color of an element's borders in the block direction.
+The border-block-color property sets the color of an element's borders in the block direction.
+
+Note: For the border-block-color property to take effect, the border-block-style must be set.
+
+Values for the border-block-color property can be set in different ways:
+
+If the border-block-color property has two values:
+
+    border-block-color: pink lightblue;
+        border color at block start is pink
+        border color at block end is lightblue
+
+If the border-block-color property has one value:
+
+    border-block-color: pink;
+        border color at block start and end is pink
+
+The CSS border-block-color property is very similar to CSS properties border-bottom-color, border-left-color, border-right-color and border-top-color, but the border-block-color property is dependent on block direction.
+
+Note: The related CSS property writing-mode defines block direction. This affects where the start and end of a block is and the result of the border-block-color property. For pages in English, inline direction is left to right and block direction is downward.
 "#,
 border_left_color r#"
-the color of an element's left border.
+The border-left-color property sets the color of an element's left border.
+
+Note: Always declare the border-style or the border-left-style property before the border-left-color property. An element must have a border before you can change the color.
 "#,
 border_right_color r#"
-the color of an element's right border.
+The border-right-color property sets the color of an element's right border.
+
+Note: Always declare the border-style or the border-right-style property before the border-right-color property. An element must have a border before you can change the color.
 "#,
 border_top_color r#"
-the color of an element's top border.
+The border-top-color property sets the color of an element's top border.
+
+Note: Always declare the border-style or the border-top-style property before the border-top-color property. An element must have a border before you can change the color.
 "#,
 border_bottom_color r#"
-the color of an element's bottom border.
+The border-bottom-color property sets the color of an element's bottom border.
+
+Note: Always declare the border-style or the border-bottom-style property before the border-bottom-color property. An element must have a border before you can change the color.
 "#,
-caret_color r#"
-color of the cursor in input elements:
+border_inline_color r#"
+The border-inline-color property sets the color of an element's borders in the inline direction.
+
+Note: For the border-inline-color property to take effect, the border-inline-style must be set.
+
+Values for the border-inline-color property can be set in different ways:
+
+If the border-inline-color property has two values:
+
+    border-inline-color: pink blue;
+        border color at inline start is pink
+        border color at inline end is blue
+
+If the border-inline-color property has one value:
+
+    border-inline-color: blue;
+        border color at inline start and end is blue
+
+The CSS border-inline-color property is very similar to CSS properties border-bottom-color, border-left-color, border-right-color and border-top-color, but the border-inline-color property is dependent on inline direction.
+
+Note: The related CSS properties writing-mode, text-orientation and direction define inline direction. This affects where the start and end of a line is and the result of the border-inline-color property. For pages in English, inline direction is left to right and block direction is downward.    
+"#,
+border_inline_start_color r#"
+The border-inline-start-color property sets the color of an element's border at the start in the inline direction.
+
+Note: For the border-inline-start-color property to take effect, the border-inline-start-style property must be set.
+
+The CSS border-inline-start-color property is very similar to CSS properties border-bottom-color, border-left-color, border-right-color and border-top-color, but the border-inline-start-color property is dependent on inline direction.
+
+Note: The related CSS properties writing-mode, text-orientation and direction define inline direction. This affects where the start and end of a line is and the result of the border-inline-start-color property. For pages in English, inline direction is left to right and block direction is downward.    
+"#,
+border_inline_end_color r#"
+The border-inline-end-color property sets the color of an element's border at the end in the inline direction.
+
+Note: For the border-inline-end-color property to take effect, the border-inline-end-style property must be set.
+
+The CSS border-inline-end-color property is very similar to CSS properties border-bottom-color, border-left-color, border-right-color and border-top-color, but the border-inline-end-color property is dependent on inline direction.
+
+Note: The related CSS properties writing-mode, text-orientation and direction define inline direction. This affects where the start and end of a line is and the result of the border-inline-end-color property. For pages in English, inline direction is left to right and block direction is downward.    
+"#,
+border_block_start_color r#"
+The border-block-start-color property sets the width of an element's border at the start in the block direction.
+
+Note: For the border-block-start-color property to take effect, the border-block-start-style property must be set.
+
+The CSS border-block-start-color property is very similar to CSS properties border-bottom-width, border-left-width, border-right-width and border-top-width, but the border-block-start-color property is dependent on block direction.
+
+Note: The related CSS property writing-mode defines block direction. This affects where the start and end of a block is and the result of the border-block-start-color property. For pages in English, inline direction is left to right and block direction is downward.    
+"#,
+border_block_end_color r#"
+The border-block-end-color property sets the color of an element's border at the end in the block direction.
+
+Note: For the border-block-end-color property to take effect, the border-block-end-style property must be set.
+
+The CSS border-block-end-color property is very similar to CSS properties border-bottom-width, border-left-width, border-right-width and border-top-width, but the border-block-end-color property is dependent on block direction.
+
+Note: The related CSS property writing-mode defines block direction. This affects where the start and end of a block is and the result of the border-block-end-color property. For pages in English, inline direction is left to right and block direction is downward.    
+"#,
+: transparent $color;
+
+color r#"
+The color property specifies the color of text.
+
+Tip: Use a background color combined with a text color that makes the text easy to read.
 "#,
 outline_color r#"
-specifies the color of an outline.
+An outline is a line that is drawn around elements, outside the borders, to make the element "stand out".
+
+The outline-color property specifies the color of an outline.
+
+Note: Always declare the outline-style property before the outline-color property. An element must have an outline before you change the color of it.
 "#,
-color r#"
-specifies the color of text.
+column_rule_color r#"
+The column-rule-color property specifies the color of the rule between columns.    
 "#
 : $color;
 
