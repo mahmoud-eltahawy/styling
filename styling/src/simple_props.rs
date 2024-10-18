@@ -23,32 +23,6 @@ Tip: Use a background color and a text color that makes the text easy to read.
 border_color r#"
 The border-color property sets the color of an element's four borders. This property can have from one to four values.
 
-If the border-color property has four values:
-
-    border-color: red green blue pink;
-        top border is red
-        right border is green
-        bottom border is blue
-        left border is pink
-
-If the border-color property has three values:
-
-    border-color: red green blue;
-        top border is red
-        right and left borders are green
-        bottom border is blue
-
-If the border-color property has two values:
-
-    border-color: red green;
-        top and bottom borders are red
-        right and left borders are green
-
-If the border-color property has one value:
-
-    border-color: red;
-        all four borders are red
-
 Note: Always declare the border-style property before the border-color property. An element must have borders before you can change the color.
 "#,
 border_block_color r#"
@@ -57,17 +31,6 @@ The border-block-color property sets the color of an element's borders in the bl
 Note: For the border-block-color property to take effect, the border-block-style must be set.
 
 Values for the border-block-color property can be set in different ways:
-
-If the border-block-color property has two values:
-
-    border-block-color: pink lightblue;
-        border color at block start is pink
-        border color at block end is lightblue
-
-If the border-block-color property has one value:
-
-    border-block-color: pink;
-        border color at block start and end is pink
 
 The CSS border-block-color property is very similar to CSS properties border-bottom-color, border-left-color, border-right-color and border-top-color, but the border-block-color property is dependent on block direction.
 
@@ -97,19 +60,6 @@ border_inline_color r#"
 The border-inline-color property sets the color of an element's borders in the inline direction.
 
 Note: For the border-inline-color property to take effect, the border-inline-style must be set.
-
-Values for the border-inline-color property can be set in different ways:
-
-If the border-inline-color property has two values:
-
-    border-inline-color: pink blue;
-        border color at inline start is pink
-        border color at inline end is blue
-
-If the border-inline-color property has one value:
-
-    border-inline-color: blue;
-        border color at inline start and end is blue
 
 The CSS border-inline-color property is very similar to CSS properties border-bottom-color, border-left-color, border-right-color and border-top-color, but the border-inline-color property is dependent on inline direction.
 
