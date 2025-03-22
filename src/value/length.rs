@@ -1,4 +1,8 @@
-use super::{Css, CssValue, CssValueT, Nil};
+use crate::{
+    Css,
+    property::Nil,
+    value::{CssValue, CssValueT},
+};
 use std::marker::PhantomData;
 
 #[derive(Debug, Clone, Copy)]
@@ -26,7 +30,7 @@ pub enum Length {
 impl CssValueT for Length {}
 
 impl<const LEN: usize> Css<Nil, Length, LEN> {
-    pub(crate) const fn helper(self, len: Length) -> Css<Nil, Nil, LEN> {
+    pub const fn helper(self, len: Length) -> Css<Nil, Nil, LEN> {
         let Self(mut css, _) = self;
         css[LEN - 1].1 = CssValue::Length(len);
         Css(css, PhantomData)

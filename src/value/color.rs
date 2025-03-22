@@ -1,6 +1,5 @@
+use crate::{Css, CssValueT, Nil, value::CssValue};
 use std::marker::PhantomData;
-
-use crate::{Css, CssValue, CssValueT, Nil};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Color {

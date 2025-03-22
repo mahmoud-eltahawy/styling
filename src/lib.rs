@@ -2,27 +2,17 @@
 #![feature(const_heap)]
 #![feature(generic_const_exprs)]
 
-use color::Color;
-use length::Length;
 use property::{CssProperty, CssPropertyT, Nil};
 use std::marker::PhantomData;
+use value::CssValueT;
 
 mod property;
 
-mod color;
-mod length;
-#[const_trait]
-pub trait CssValueT {}
-#[derive(Debug, Clone, Copy)]
-enum CssValue {
-    None,
-    Length(Length),
-    Color(Color),
-}
+mod value;
 
 #[derive(Debug)]
 pub struct Css<Property: CssPropertyT, Value: CssValueT, const LEN: usize>(
-    [(CssProperty, CssValue); LEN],
+    [(CssProperty, value::CssValue); LEN],
     PhantomData<(Property, Value)>,
 );
 
